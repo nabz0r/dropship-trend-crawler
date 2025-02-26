@@ -1,0 +1,28 @@
+{
+  "crawler": {
+    "interval": 3600000,
+    "searchQueries": [
+      "produits tendance dropshipping",
+      "best selling products online",
+      "trending products ecommerce",
+      "viral products social media"
+    ],
+    "maxResults": 20,
+    "minRelevanceScore": 30
+  },
+  "analyzer": {
+    "minScoreToIndex": 70,
+    "minScoreToWatch": 40,
+    "factors": {
+      "popularity": 0.4,
+      "profitability": 0.3,
+      "competition": 0.2,
+      "seasonality": 0.1
+    }
+  },
+  "catalogManager": {
+    "autoIndex": true,
+    "autoDeindex": false,
+    "minPerformanceDays": 14
+  }
+}
