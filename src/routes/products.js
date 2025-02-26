@@ -3,9 +3,23 @@ const router = express.Router();
 const productRepository = require('../data/productRepository');
 const { saveProductData, updateProductAnalysis, updateCatalogStatus } = require('../models/product');
 const logger = require('../utils/logger');
+const { cacheMiddleware } = require('../utils/cache');
+const {
+  validateProductId,
+  validatePagination,
+  validateProductData,
+  validateAnalysisData,
+  validateCatalogStatus
+} = require('../middlewares/validation');
+
+// Configuration des durées de cache
+const CACHE_DURATION = {
+  PRODUCTS_LIST: 2 * 60 * 1000,  // 2 minutes pour la liste des produits
+  PRODUCT_DETAIL: 5 * 60 * 1000  // 5 minutes pour les détails d'un produit
+};
 
 // GET /api/products - Liste tous les produits
-router.get('/', async (req, res) => {
+router.get('/', validatePagination, cacheMiddleware(CACHE_DURATION.PRODUCTS_LIST), async (req, res) => {
   try {
     const { page = 1, limit = 10, status, recommendation } = req.query;
     
@@ -24,7 +38,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/products/:id - Détails d'un produit
-router.get('/:id', async (req, res) => {
+router.get('/:id', validateProductId, cacheMiddleware(CACHE_DURATION.PRODUCT_DETAIL), async (req, res) => {
   try {
     const product = await productRepository.findById(req.params.id);
     
@@ -40,7 +54,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/products - Ajoute manuellement un produit
-router.post('/', async (req, res) => {
+router.post('/', validateProductData, async (req, res) => {
   try {
     const productData = {
       ...req.body,
@@ -57,7 +71,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/products/:id - Met à jour un produit
-router.put('/:id', async (req, res) => {
+router.put('/:id', validateProductId, validateProductData, async (req, res) => {
   try {
     const { id } = req.params;
     const product = await productRepository.findById(id);
@@ -83,7 +97,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // PUT /api/products/:id/analysis - Met à jour l'analyse d'un produit
-router.put('/:id/analysis', async (req, res) => {
+router.put('/:id/analysis', validateProductId, validateAnalysisData, async (req, res) => {
   try {
     const { id } = req.params;
     const { analysis } = req.body;
@@ -97,7 +111,7 @@ router.put('/:id/analysis', async (req, res) => {
 });
 
 // PUT /api/products/:id/catalog-status - Met à jour le statut catalogue
-router.put('/:id/catalog-status', async (req, res) => {
+router.put('/:id/catalog-status', validateProductId, validateCatalogStatus, async (req, res) => {
   try {
     const { id } = req.params;
     const { status, catalogId } = req.body;
@@ -111,7 +125,7 @@ router.put('/:id/catalog-status', async (req, res) => {
 });
 
 // DELETE /api/products/:id - Supprime un produit
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', validateProductId, async (req, res) => {
   try {
     const { id } = req.params;
     
