@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuration - DropShip Trend Crawler</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      background-color: #34495e;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .nav-bar a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 15px;
+      border-radius: 3px;
+    }
+    .nav-bar a:hover, .nav-bar a.active {
+      background-color: #2980b9;
+    }
+    .config-card {
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .config-section {
+      margin-bottom: 20px;
+    }
+    h2 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      color: #2c3e50;
+    }
+    textarea {
+      width: 100%;
+      min-height: 300px;
+      font-family: monospace;
+      padding: 10px;
+      border-radius: 3px;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+    }
+    button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+    button.reset {
+      background-color: #e74c3c;
+    }
+    button.reset:hover {
+      background-color: #c0392b;
+    }
+    .message {
+      padding: 10px;
+      border-radius: 3px;
+      margin-bottom: 10px;
+    }
+    .success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .error {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .hidden {
+      display: none;
+    }
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 14px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DropShip Trend Crawler</h1>
+    <p>Configuration du système</p>
+  </header>
+
+  <div class="nav-bar">
+    <div>
+      <a href="/">Dashboard</a>
+      <a href="/products.html">Produits</a>
+      <a href="/settings.html" class="active">Configuration</a>
+    </div>
+    <div>
+      <a href="/api/crawl" id="start-crawl-btn">Lancer un crawling</a>
+    </div>
+  </div>
+  
+  <div id="success-message" class="message success hidden"></div>
+  <div id="error-message" class="message error hidden"></div>
+
+  <div class="config-card">
+    <h2>Configuration du système</h2>
+    <p>Modifiez les paramètres ci-dessous pour personnaliser le comportement du système. Les modifications seront appliquées lors du prochain crawling.</p>
+    
+    <div class="config-section">
+      <h3>Paramètres actuels</h3>
+      <textarea id="config-editor"></textarea>
+      <div>
+        <button id="save-config">Enregistrer les modifications</button>
+        <button id="format-json">Formatter le JSON</button>
+        <button id="reset-config" class="reset">Réinitialiser aux valeurs par défaut</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>DropShip Trend Crawler - Version 0.1.0</p>
+  </footer>
+
+  <script>
+    // Fonction pour afficher un message
+    function showMessage(type, message) {
+      const element = document.getElementById(`${type}-message`);
+      element.textContent = message;
+      element.classList.remove('hidden');
+      setTimeout(() => {
+        element.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Fonction pour formatter le JSON
+    function formatJSON() {
+      try {
+        const textarea = document.getElementById('config-editor');
+        const json = JSON.parse(textarea.value);
+        textarea.value = JSON.stringify(json, null, 2);
+      } catch (error) {
+        showMessage('error', `Erreur lors du formatage: ${error.message}`);
+      }
+    }
+
+    // Chargement de la configuration actuelle
+    async function loadConfig() {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const config = await response.json();
+          document.getElementById('config-editor').value = JSON.stringify(config, null, 2);
+        } else {
+          throw new Error('Impossible de charger la configuration');
+        }
+      } catch (error) {
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Enregistrement de la configuration
+    async function saveConfig() {
+      try {
+        const configText = document.getElementById('config-editor').value;
+        const config = JSON.parse(configText);
+        
+        const response = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(config)
+        });
+        
+        if (response.ok) {
+          showMessage('success', 'Configuration enregistrée avec succès');
+        } else {
+          const error = await response.json();
+          throw new Error(error.error || 'Erreur lors de l\'enregistrement');
+        }
+      } catch (error) {
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Réinitialisation de la configuration
+    async function resetConfig() {
+      if (confirm('Êtes-vous sûr de vouloir réinitialiser la configuration aux valeurs par défaut ?')) {
+        try {
+          const response = await fetch('/api/settings/reset');
+          if (response.ok) {
+            const config = await response.json();
+            document.getElementById('config-editor').value = JSON.stringify(config, null, 2);
+            showMessage('success', 'Configuration réinitialisée avec succès');
+          } else {
+            throw new Error('Impossible de réinitialiser la configuration');
+          }
+        } catch (error) {
+          showMessage('error', `Erreur: ${error.message}`);
+        }
+      }
+    }
+
+    // Gestion des événements
+    document.getElementById('save-config').addEventListener('click', saveConfig);
+    document.getElementById('format-json').addEventListener('click', formatJSON);
+    document.getElementById('reset-config').addEventListener('click', resetConfig);
+
+    // Chargement initial
+    window.addEventListener('load', loadConfig);
+  </script>
+</body>
+</html>
