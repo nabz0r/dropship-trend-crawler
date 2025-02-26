@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DropShip Trend Crawler - Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+    }
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .card h2 {
+      margin-top: 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      color: #2c3e50;
+    }
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+    .stat-box {
+      text-align: center;
+      background-color: #ecf0f1;
+      padding: 15px;
+      border-radius: 5px;
+      flex: 1;
+      margin: 0 5px;
+    }
+    .stat-box h3 {
+      margin: 0;
+      font-size: 14px;
+      color: #7f8c8d;
+    }
+    .stat-box p {
+      margin: 5px 0 0;
+      font-size: 24px;
+      font-weight: bold;
+      color: #2980b9;
+    }
+    .action-btn {
+      display: inline-block;
+      background-color: #3498db;
+      color: white;
+      padding: 8px 15px;
+      border-radius: 3px;
+      text-decoration: none;
+      margin-right: 10px;
+      transition: background-color 0.3s;
+    }
+    .action-btn:hover {
+      background-color: #2980b9;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:hover {
+      background-color: #f5f5f5;
+    }
+    .api-section code {
+      background-color: #f8f8f8;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-family: monospace;
+      color: #e74c3c;
+    }
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 14px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DropShip Trend Crawler</h1>
+    <p>Système automatisé de découverte de produits tendance pour le dropshipping</p>
+  </header>
+
+  <div class="dashboard">
+    <div class="card">
+      <h2>État du système</h2>
+      <div class="stats">
+        <div class="stat-box">
+          <h3>Produits</h3>
+          <p id="products-count">--</p>
+        </div>
+        <div class="stat-box">
+          <h3>À indexer</h3>
+          <p id="index-count">--</p>
+        </div>
+        <div class="stat-box">
+          <h3>À surveiller</h3>
+          <p id="watch-count">--</p>
+        </div>
+      </div>
+      <p>Dernier crawling : <span id="last-crawl">--</span></p>
+      <p>Prochain crawling : <span id="next-crawl">--</span></p>
+      <div>
+        <a href="#" class="action-btn" id="start-crawl-btn">Lancer un crawling</a>
+        <a href="/api/settings" class="action-btn">Paramètres</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Produits tendance</h2>
+      <table id="trending-products">
+        <thead>
+          <tr>
+            <th>Produit</th>
+            <th>Score</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="3">Chargement des données...</td>
+          </tr>
+        </tbody>
+      </table>
+      <p style="text-align: right; margin-top: 10px;">
+        <a href="/api/trends" class="action-btn">Voir tout</a>
+      </p>
+    </div>
+  </div>
+
+  <div class="card api-section">
+    <h2>API REST</h2>
+    <p>Le système expose les endpoints suivants pour l'intégration avec d'autres services :</p>
+    <ul>
+      <li><code>GET /api/products</code> - Liste des produits</li>
+      <li><code>GET /api/trends</code> - Tendances actuelles</li>
+      <li><code>GET /api/trends/history</code> - Historique des tendances</li>
+      <li><code>GET /api/trends/categories</code> - Tendances par catégorie</li>
+      <li><code>GET /api/settings</code> - Paramètres du système</li>
+    </ul>
+    <p>Consultez la documentation dans le dossier <code>docs/</code> pour plus d'informations.</p>
+  </div>
+
+  <footer>
+    <p>DropShip Trend Crawler - Version 0.1.0</p>
+  </footer>
+
+  <script>
+    // Fonction pour formater la date
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString('fr-FR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // Fonction pour charger les données
+    async function loadData() {
+      try {
+        // Charger le nombre de produits
+        const productsResponse = await fetch('/api/products');
+        if (productsResponse.ok) {
+          const productsData = await productsResponse.json();
+          document.getElementById('products-count').textContent = productsData.pagination.total || '0';
+        }
+
+        // Charger les tendances
+        const trendsResponse = await fetch('/api/trends');
+        if (trendsResponse.ok) {
+          const trendsData = await trendsResponse.json();
+          const trendsTable = document.getElementById('trending-products').querySelector('tbody');
+          
+          if (trendsData.length > 0) {
+            trendsTable.innerHTML = '';
+            trendsData.slice(0, 5).forEach(product => {
+              trendsTable.innerHTML += `
+                <tr>
+                  <td>${product.title}</td>
+                  <td>${product.score}</td>
+                  <td>${product.catalogStatus}</td>
+                </tr>
+              `;
+            });
+          } else {
+            trendsTable.innerHTML = '<tr><td colspan="3">Aucune tendance disponible</td></tr>';
+          }
+
+          // Compter les recommandations
+          const indexCount = trendsData.filter(p => p.recommendation === 'index').length;
+          const watchCount = trendsData.filter(p => p.recommendation === 'watch').length;
+          
+          document.getElementById('index-count').textContent = indexCount;
+          document.getElementById('watch-count').textContent = watchCount;
+        }
+
+        // Simuler des dates de crawling pour la démo
+        const now = new Date();
+        const lastCrawl = new Date(now.getTime() - 45 * 60000); // 45 minutes ago
+        const nextCrawl = new Date(now.getTime() + 15 * 60000); // 15 minutes from now
+        
+        document.getElementById('last-crawl').textContent = formatDate(lastCrawl);
+        document.getElementById('next-crawl').textContent = formatDate(nextCrawl);
+
+      } catch (error) {
+        console.error('Erreur lors du chargement des données:', error);
+      }
+    }
+
+    // Gestion du bouton de crawling
+    document.getElementById('start-crawl-btn').addEventListener('click', async function(e) {
+      e.preventDefault();
+      this.textContent = 'Crawling en cours...';
+      this.style.backgroundColor = '#7f8c8d';
+      
+      try {
+        // Simuler un crawling
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        alert('Crawling lancé avec succès!\nLes résultats seront disponibles dans quelques minutes.');
+      } catch (error) {
+        alert('Erreur lors du lancement du crawling: ' + error.message);
+      } finally {
+        this.textContent = 'Lancer un crawling';
+        this.style.backgroundColor = '#3498db';
+      }
+    });
+
+    // Charger les données au chargement de la page
+    window.addEventListener('load', loadData);
+  </script>
+</body>
+</html>
