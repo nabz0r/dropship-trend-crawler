@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Product = require('../models/productSchema');
+const productRepository = require('../data/productRepository');
 const { saveProductData, updateProductAnalysis, updateCatalogStatus } = require('../models/product');
 const logger = require('../utils/logger');
 
@@ -9,29 +9,14 @@ router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, status, recommendation } = req.query;
     
-    // Construction de la requête
-    const query = {};
-    if (status) query.catalogStatus = status;
-    if (recommendation) query['analysis.recommendation'] = recommendation;
+    // Utilisation du repository pour la pagination et les filtres
+    const result = await productRepository.findWithPagination(
+      { status, recommendation },
+      page,
+      limit
+    );
     
-    // Exécution de la requête avec pagination
-    const products = await Product.find(query)
-      .sort({ discoveredAt: -1 })
-      .limit(parseInt(limit))
-      .skip((parseInt(page) - 1) * parseInt(limit));
-    
-    // Comptage du total pour la pagination
-    const total = await Product.countDocuments(query);
-    
-    res.json({
-      products,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        pages: Math.ceil(total / limit)
-      }
-    });
+    res.json(result);
   } catch (error) {
     logger.error(`Erreur lors de la récupération des produits: ${error.message}`);
     res.status(500).json({ error: 'Erreur lors de la récupération des produits' });
@@ -41,7 +26,7 @@ router.get('/', async (req, res) => {
 // GET /api/products/:id - Détails d'un produit
 router.get('/:id', async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await productRepository.findById(req.params.id);
     
     if (!product) {
       return res.status(404).json({ error: 'Produit non trouvé' });
@@ -75,7 +60,7 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id);
+    const product = await productRepository.findById(id);
     
     if (!product) {
       return res.status(404).json({ error: 'Produit non trouvé' });
@@ -129,14 +114,13 @@ router.put('/:id/catalog-status', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const product = await Product.findById(id);
     
-    if (!product) {
+    const deleted = await productRepository.deleteById(id);
+    if (deleted) {
+      res.json({ message: 'Produit supprimé avec succès' });
+    } else {
       return res.status(404).json({ error: 'Produit non trouvé' });
     }
-    
-    await Product.findByIdAndDelete(id);
-    res.json({ message: 'Produit supprimé avec succès' });
   } catch (error) {
     logger.error(`Erreur lors de la suppression du produit: ${error.message}`);
     res.status(500).json({ error: 'Erreur lors de la suppression du produit' });
