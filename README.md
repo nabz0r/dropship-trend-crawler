@@ -12,7 +12,7 @@ Unlike a traditional web crawler, this system uses the Brave Search API to disco
 2. **Analysis**: Each product is evaluated according to popularity, profitability, competition and seasonality
 3. **Decision**: Based on this analysis, the system recommends adding, monitoring or ignoring each product
 
-[Learn more about how it works in detail](docs/howitworks.md)
+[Learn more about how it works in detail](docs/fonctionnement.md)
 
 ## Objective
 
