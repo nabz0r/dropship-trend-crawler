@@ -2,9 +2,18 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/productSchema');
 const logger = require('../utils/logger');
+const { cacheMiddleware } = require('../utils/cache');
+
+// Configuration des durées de cache en millisecondes
+const CACHE_DURATION = {
+  TRENDS: 5 * 60 * 1000,        // 5 minutes pour les tendances générales
+  HISTORY: 30 * 60 * 1000,      // 30 minutes pour l'historique
+  CATEGORIES: 15 * 60 * 1000,   // 15 minutes pour les catégories
+  SEARCH_TERMS: 10 * 60 * 1000  // 10 minutes pour les termes de recherche
+};
 
 // GET /api/trends - Récupère les tendances actuelles
-router.get('/', async (req, res) => {
+router.get('/', cacheMiddleware(CACHE_DURATION.TRENDS), async (req, res) => {
   try {
     // Agrégation pour obtenir les tendances basées sur les scores d'analyse
     const trends = await Product.aggregate([
@@ -33,7 +42,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/trends/history - Historique des tendances
-router.get('/history', async (req, res) => {
+router.get('/history', cacheMiddleware(CACHE_DURATION.HISTORY), async (req, res) => {
   try {
     const { days = 7 } = req.query;
     const daysAgo = new Date();
@@ -79,7 +88,7 @@ router.get('/history', async (req, res) => {
 });
 
 // GET /api/trends/categories - Tendances par catégorie
-router.get('/categories', async (req, res) => {
+router.get('/categories', cacheMiddleware(CACHE_DURATION.CATEGORIES), async (req, res) => {
   try {
     // Agrégation pour obtenir les tendances par catégorie
     const categories = await Product.aggregate([
@@ -119,7 +128,7 @@ router.get('/categories', async (req, res) => {
 });
 
 // GET /api/trends/search-terms - Termes de recherche les plus efficaces
-router.get('/search-terms', async (req, res) => {
+router.get('/search-terms', cacheMiddleware(CACHE_DURATION.SEARCH_TERMS), async (req, res) => {
   try {
     // Agrégation pour obtenir les termes de recherche les plus efficaces
     const searchTerms = await Product.aggregate([
