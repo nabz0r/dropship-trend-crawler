@@ -46,6 +46,8 @@ Le système est organisé en plusieurs modules :
 - MongoDB installé et en cours d'exécution (optionnel - le système peut fonctionner en mode démo sans base de données)
 - Clé API Brave Search (optionnelle - le système utilise des données de test si aucune clé n'est configurée)
 
+[Guide d'installation de MongoDB](docs/mongodb-installation.md)
+
 ## Installation
 
 ```bash
@@ -85,7 +87,7 @@ Le système peut fonctionner sans MongoDB et sans clé API Brave Search en utili
 
 ### Configuration personnalisée
 
-Vous pouvez personnaliser le comportement du système via le fichier `config/crawler-settings.json` :
+Vous pouvez personnaliser le comportement du système via le fichier `config/crawler-settings.json` ou via l'interface web :
 - Modifier les requêtes de recherche
 - Ajuster les poids des différents facteurs d'analyse
 - Configurer les seuils de décision
@@ -122,7 +124,7 @@ Pour intégrer ce système à votre plateforme de dropshipping, vous pouvez :
 
 3. Utiliser l'API REST pour développer votre propre interface utilisateur.
 
-## Développement futur 
+## Développement futur
 
 Voir la liste des tâches dans le fichier [TASKS.md](TASKS.md) pour les fonctionnalités prévues pour les prochaines versions.
 
@@ -133,12 +135,12 @@ Consultez le dossier `docs/` pour des informations détaillées sur :
 - Le [fonctionnement détaillé](docs/fonctionnement.md) du système
 - L'utilisation de l'[API Brave Search](docs/brave_api.md)
 - L'[architecture du système](docs/architecture.md)
+- L'[installation de MongoDB](docs/mongodb-installation.md)
 
-## 🤝 Contribution
-We Welcome: 💻 Network Engineers 👀 Research Scientists 🌎 Cloud Architects 🤖 AI/ML Specialists
+## Licence
 
-## 📞 Contact
-Email: nabz0r@gmail.com GitHub: @nabz0r
+MIT
 
-## 📜 License
-MIT License - Innovation without Boundaries
+## Contact
+
+Pour toute question ou suggestion, n'hésitez pas à ouvrir une issue sur ce dépôt GitHub.
