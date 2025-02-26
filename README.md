@@ -1,9 +1,16 @@
 # DropShip Trend Crawler
 
-Un système automatisé de crawling web pour l'identification de produits tendance pour le dropshipping.
+Un système automatisé qui utilise l'API Brave Search pour identifier des produits tendance pour le dropshipping.
 
-<img width="1224" alt="Capture d’écran 2025-02-26 à 12 41 28" src="https://github.com/user-attachments/assets/d53551bd-2636-41ff-84b5-1417969844f6" />
+## Fonctionnement
 
+Contrairement à un crawler web traditionnel, ce système utilise l'API Brave Search pour découvrir des produits potentiels en effectuant des recherches ciblées. Le processus se déroule en trois étapes principales :
+
+1. **Découverte** : Des requêtes prédéfinies sont envoyées à l'API Brave Search pour trouver des produits potentiels
+2. **Analyse** : Chaque produit est évalué selon des critères de popularité, rentabilité, concurrence et saisonnalité
+3. **Décision** : Sur la base de cette analyse, le système recommande d'ajouter, surveiller ou ignorer chaque produit
+
+[En savoir plus sur le fonctionnement détaillé](docs/fonctionnement.md)
 
 ## Objectif
 
@@ -76,6 +83,14 @@ L'application sera disponible à l'adresse `http://localhost:3000` (ou le port s
 
 Le système peut fonctionner sans MongoDB et sans clé API Brave Search en utilisant des données fictives. C'est idéal pour tester rapidement les fonctionnalités sans configuration complète.
 
+### Configuration personnalisée
+
+Vous pouvez personnaliser le comportement du système via le fichier `config/crawler-settings.json` :
+- Modifier les requêtes de recherche
+- Ajuster les poids des différents facteurs d'analyse
+- Configurer les seuils de décision
+- Activer/désactiver l'indexation automatique
+
 ### Endpoints API
 
 L'API REST expose les endpoints suivants :
@@ -97,10 +112,6 @@ L'API REST expose les endpoints suivants :
 
 - `POST /api/crawl` - Déclencher manuellement un crawling
 
-### Paramètres de configuration
-
-Les paramètres du système sont stockés dans un fichier JSON dans le dossier `config/crawler-settings.json`. Vous pouvez les modifier via l'API ou directement dans le fichier.
-
 ## Intégration à votre système de dropshipping
 
 Pour intégrer ce système à votre plateforme de dropshipping, vous pouvez :
@@ -119,18 +130,11 @@ Voir la liste des tâches dans le fichier [TASKS.md](TASKS.md) pour les fonction
 
 Consultez le dossier `docs/` pour des informations détaillées sur :
 
+- Le [fonctionnement détaillé](docs/fonctionnement.md) du système
 - L'utilisation de l'[API Brave Search](docs/brave_api.md)
-- L'architecture du système
-- Les bonnes pratiques pour le dropshipping
+- L'[architecture du système](docs/architecture.md)
 
-## 🤝 Contribution
-We Welcome: 💻 Network Engineers 👀 Research Scientists 🌎 Cloud Architects 🤖 AI/ML Specialists
-
-## 📞 Contact
-Email: nabz0r@gmail.com GitHub: @nabz0r
-
-## 📜 License
-MIT License - Innovation without Boundaries
+## Licence
 
 MIT
 
