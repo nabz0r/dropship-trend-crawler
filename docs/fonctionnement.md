@@ -1,137 +1,137 @@
-# Fonctionnement du DropShip Trend Crawler
+# How DropShip Trend Crawler Works
 
 ## Introduction
 
-Le DropShip Trend Crawler est un système qui permet d'identifier automatiquement des produits tendance pour le dropshipping. Ce document explique en détail son fonctionnement, ses composants et comment l'utiliser efficacement.
+DropShip Trend Crawler is a system that automatically identifies trending products for dropshipping. This document explains in detail how it works, its components, and how to use it effectively.
 
-## Architecture générale
+## General Architecture
 
-Le système se compose de trois modules principaux :
+The system consists of three main modules:
 
-1. **Crawler** : Découvre des produits potentiels en utilisant l'API Brave Search
-2. **Analyseur** : Évalue chaque produit selon plusieurs critères
-3. **Gestionnaire de catalogue** : Automatise l'ajout et le retrait de produits
+1. **Crawler**: Discovers potential products using the Brave Search API
+2. **Analyzer**: Evaluates each product based on multiple criteria
+3. **Catalog Manager**: Automates the addition and removal of products
 
-## Processus de découverte des produits
+## Product Discovery Process
 
-Contrairement à un crawler web traditionnel qui parcourt directement les sites web, ce système utilise l'API Brave Search comme intermédiaire pour découvrir des produits potentiels. Voici comment cela fonctionne :
+Unlike a traditional web crawler that directly crawls websites, this system uses the Brave Search API as an intermediary to discover potential products. Here's how it works:
 
-### 1. Configuration des requêtes
+### 1. Configuring queries
 
-Le système est configuré avec un ensemble de requêtes de recherche prédéfinies, telles que :
-- "produits tendance dropshipping"
+The system is configured with a set of predefined search queries, such as:
+- "trending products dropshipping"
 - "best selling products online"
 - "trending products ecommerce"
 - "viral products social media"
 
-Vous pouvez personnaliser ces requêtes en modifiant le fichier de configuration `config/crawler-settings.json`.
+You can customize these queries by editing the `config/crawler-settings.json` configuration file.
 
-### 2. Exécution des recherches
+### 2. Running searches
 
-Toutes les heures (ou manuellement via l'interface), le système envoie ces requêtes à l'API Brave Search. Brave Search est un moteur de recherche qui indexe des milliards de pages web et retourne les résultats les plus pertinents.
+Every hour (or manually via the interface), the system sends these queries to the Brave Search API. Brave Search is a search engine that indexes billions of web pages and returns the most relevant results.
 
-**Avantage** : Nous n'avons pas besoin de gérer l'infrastructure complexe nécessaire pour crawler directement des millions de sites web - Brave s'en charge pour nous.
+**Benefit**: We don't need to manage the complex infrastructure required to crawl millions of websites directly - Brave takes care of it for us.
 
-### 3. Traitement des résultats
+### 3. Processing results
 
-Pour chaque requête, le système reçoit jusqu'à 20 résultats (configurable). Ces résultats contiennent :
-- Le titre de la page
-- Une description
-- L'URL complète
-- D'autres métadonnées
+For each query, the system receives up to 20 results (configurable). These results contain:
+- The title of the page
+- A description
+- The full URL
+- Other metadata
 
-### 4. Filtrage initial
+### 4. Initial filtering
 
-Un premier filtrage est effectué pour ne conserver que les résultats pertinents pour le dropshipping. Ce filtrage est basé sur des mots-clés prédéfinis et un score de pertinence.
+A first filtering is carried out to keep only the results relevant to dropshipping. This filtering is based on predefined keywords and a relevance score.
 
-## Processus d'analyse des produits
+## Product analysis process
 
-Après la découverte des produits, chacun est analysé pour déterminer son potentiel. 
+After the discovery of the products, each one is analyzed to determine its potential.
 
-### Critères d'analyse
+### Analysis criteria
 
-L'analyse se fait selon quatre critères principaux :
+The analysis is done according to four main criteria:
 
-1. **Popularité (40%)** : Évalue la demande actuelle pour le produit
-   - Mentions de termes comme "populaire", "tendance", "viral"
-   - En production, pourrait intégrer des données de réseaux sociaux et Google Trends
+1. **Popularity (40%)**: Evaluates the current demand for the product
+- Mentions of terms like "popular", "trendy", "viral"
+- In production, could integrate data from social networks and Google Trends
 
-2. **Rentabilité (30%)** : Estime les marges potentielles
-   - Analyse des catégories généralement rentables (accessoires, gadgets, etc.)
-   - Mots-clés liés aux marges et profits
+2. **Profitability (30%)**: Estimates potential margins
+- Analysis of generally profitable categories (accessories, gadgets, etc.)
+- Keywords related to margins and profits
 
-3. **Concurrence (20%)** : Évalue le niveau de saturation du marché
-   - Une note élevée signifie une faible concurrence (positif)
-   - Détection de niches versus marchés saturés
+3. **Competition (20%)**: Evaluates the level of market saturation
+- A high score means low competition (positive)
+- Detection of niches versus saturated markets
 
-4. **Saisonnalité (10%)** : Détermine si le produit est actuellement en saison
-   - Prise en compte du mois actuel
-   - Produits saisonniers vs produits intemporels
+4. **Seasonality (10%)**: Determines whether the product is currently in season
+- Taking into account the current month
+- Seasonal products vs. timeless products
 
-### Calcul du score global
+### Calculating the overall score
 
-Un score entre 0 et 100 est calculé en fonction de ces critères, pondérés selon leur importance. En fonction de ce score, une recommandation est générée :
+A score between 0 and 100 is calculated based on these criteria, weighted according to their importance. Based on this score, a recommendation is generated:
 
-- Score ≥ 70 : **Indexer** (ajouter au catalogue)
-- Score entre 40 et 70 : **Surveiller** (potentiel intéressant)
-- Score < 40 : **Ignorer** (faible potentiel)
+- Score ≥ 70: **Index** (add to catalog)
+- Score between 40 and 70: **Monitor** (interesting potential)
+- Score < 40: **Ignore** (low potential)
 
-Ces seuils sont configurables dans le fichier `config/crawler-settings.json`.
+These thresholds are configurable in the `config/crawler-settings.json` file.
 
-## Gestion automatique du catalogue
+## Automatic catalog management
 
-En fonction des analyses, le système peut automatiquement :
+Depending on the analyses, the system can automatically:
 
-1. **Ajouter des produits** : Les produits avec la recommandation "indexer" sont ajoutés au catalogue
-2. **Surveiller des produits** : Les produits avec la recommandation "surveiller" sont conservés pour analyse future
-3. **Retirer des produits** : Les produits dont les performances déclinent peuvent être automatiquement retirés
+1. **Add products**: Products with the "index" recommendation are added to the catalog
+2. **Monitor products**: Products with the "monitor" recommendation are kept for future analysis
+3. **Remove products**: Products whose performance declines can be automatically removed
 
-Cette automatisation peut être activée ou désactivée dans les paramètres.
+This automation can be enabled or disabled in the settings.
 
-## Configuration de l'API Brave Search
+## Brave Search API Setup
 
-### Obtention d'une clé API
+### Obtaining an API Key
 
-Pour utiliser le système en production, vous aurez besoin d'une clé API Brave Search :
+To use the system in production, you will need a Brave Search API Key:
 
-1. Visitez [Brave Search API](https://brave.com/search/api/)
-2. Créez un compte ou connectez-vous
-3. Souscrivez à un plan (il existe généralement une option gratuite avec un quota limité)
-4. Générez votre clé API
-5. Ajoutez cette clé dans le fichier `.env` :
-   ```
-   BRAVE_API_KEY=votre_clé_api_ici
-   ```
+1. Visit [Brave Search API](https://brave.com/search/api/)
+2. Create an account or log in
+3. Subscribe to a plan (there is usually a free option with limited quota)
+4. Generate your API Key
+5. Add this key to the `.env` file:
+```
+BRAVE_API_KEY=your_api_key_here
+```
 
-### Mode démo
+### Demo Mode
 
-Si vous n'avez pas de clé API Brave Search, le système fonctionnera en mode démo, générant des données fictives pour vous permettre de tester toutes les fonctionnalités.
+If you do not have a Brave Search API Key, the system will run in demo mode, generating dummy data for you to test all the features.
 
-## Personnalisation et amélioration
+## Customization and Improvement
 
-Le système est conçu pour être facilement adaptable. Voici quelques points d'amélioration possibles :
+The system is designed to be easily adaptable. Here are some possible areas for improvement:
 
-### Sources de données supplémentaires
+### Additional data sources
 
-Vous pourriez intégrer d'autres sources pour améliorer la découverte et l'analyse :
-- API de marketplaces (Amazon, AliExpress, etc.)
-- Données de réseaux sociaux (Instagram, TikTok, etc.)
+You could integrate other sources to improve discovery and analysis:
+- Marketplace APIs (Amazon, AliExpress, etc.)
+- Social media data (Instagram, TikTok, etc.)
 - Google Trends API
-- Données de fournisseurs dropshipping
+- Dropshipping Supplier Data
 
-### Algorithmes d'analyse avancés
+### Advanced Analytics Algorithms
 
-Les algorithmes actuels sont relativement simples mais efficaces. Vous pourriez implémenter :
-- Apprentissage automatique pour prédire les performances des produits
-- Analyse de sentiment sur les commentaires des produits
-- Vision par ordinateur pour analyser les images des produits
+Current algorithms are relatively simple but effective. You could implement:
+- Machine learning to predict product performance
+- Sentiment analysis on product reviews
+- Computer vision to analyze product images
 
-### Intégration avec votre plateforme e-commerce
+### Integration with your e-commerce platform
 
-Pour une automatisation complète, vous devriez connecter le système à votre plateforme de vente :
-1. Modifiez les méthodes `addProductToCatalog` et `removeProductFromCatalog` dans `src/services/catalogManager.js`
-2. Implémentez la logique spécifique à votre plateforme (Shopify, WooCommerce, etc.)
+For full automation, you should connect the system to your sales platform:
+1. Modify the `addProductToCatalog` and `removeProductFromCatalog` methods in `src/services/catalogManager.js`
+2. Implement the logic specific to your platform (Shopify, WooCommerce, etc.)
 
 ## Conclusion
 
-Le DropShip Trend Crawler offre une approche innovante pour découvrir des produits tendance sans avoir à gérer l'infrastructure complexe d'un crawler web traditionnel. En utilisant l'API Brave Search comme source de données et des algorithmes d'analyse adaptés au dropshipping, il automatise une grande partie du processus de sélection de produits.
+The DropShip Trend Crawler offers an innovative approach to discover trending products without having to manage the complex infrastructure of a traditional web crawler. By using the Brave Search API as a data source and analysis algorithms tailored for dropshipping, it automates much of the product selection process.
