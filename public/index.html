@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DropShip Trend Crawler - Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -23,6 +24,23 @@
     }
     h1 {
       margin: 0;
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      background-color: #34495e;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .nav-bar a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 15px;
+      border-radius: 3px;
+    }
+    .nav-bar a:hover, .nav-bar a.active {
+      background-color: #2980b9;
     }
     .dashboard {
       display: grid;
@@ -75,6 +93,7 @@
       text-decoration: none;
       margin-right: 10px;
       transition: background-color 0.3s;
+      cursor: pointer;
     }
     .action-btn:hover {
       background-color: #2980b9;
@@ -95,12 +114,27 @@
     tr:hover {
       background-color: #f5f5f5;
     }
-    .api-section code {
-      background-color: #f8f8f8;
-      padding: 2px 5px;
+    .chart-container {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
+    }
+    .product-recommendation {
+      padding: 3px 8px;
       border-radius: 3px;
-      font-family: monospace;
-      color: #e74c3c;
+      font-weight: bold;
+    }
+    .recommendation-index {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .recommendation-watch {
+      background-color: #f39c12;
+      color: white;
+    }
+    .recommendation-skip {
+      background-color: #e74c3c;
+      color: white;
     }
     footer {
       margin-top: 50px;
@@ -115,8 +149,19 @@
 <body>
   <header>
     <h1>DropShip Trend Crawler</h1>
-    <p>Système automatisé de découverte de produits tendance pour le dropshipping</p>
+    <p>Tableau de bord de découverte de produits tendance pour le dropshipping</p>
   </header>
+
+  <div class="nav-bar">
+    <div>
+      <a href="/" class="active">Dashboard</a>
+      <a href="/products.html">Produits</a>
+      <a href="/settings.html">Configuration</a>
+    </div>
+    <div>
+      <a href="#" class="action-btn" id="start-crawl-btn">Lancer un crawling</a>
+    </div>
+  </div>
 
   <div class="dashboard">
     <div class="card">
@@ -137,10 +182,6 @@
       </div>
       <p>Dernier crawling : <span id="last-crawl">--</span></p>
       <p>Prochain crawling : <span id="next-crawl">--</span></p>
-      <div>
-        <a href="#" class="action-btn" id="start-crawl-btn">Lancer un crawling</a>
-        <a href="/api/settings" class="action-btn">Paramètres</a>
-      </div>
     </div>
 
     <div class="card">
@@ -160,22 +201,46 @@
         </tbody>
       </table>
       <p style="text-align: right; margin-top: 10px;">
-        <a href="/api/trends" class="action-btn">Voir tout</a>
+        <a href="/products.html" class="action-btn">Voir tous les produits</a>
       </p>
     </div>
   </div>
 
-  <div class="card api-section">
-    <h2>API REST</h2>
-    <p>Le système expose les endpoints suivants pour l'intégration avec d'autres services :</p>
-    <ul>
-      <li><code>GET /api/products</code> - Liste des produits</li>
-      <li><code>GET /api/trends</code> - Tendances actuelles</li>
-      <li><code>GET /api/trends/history</code> - Historique des tendances</li>
-      <li><code>GET /api/trends/categories</code> - Tendances par catégorie</li>
-      <li><code>GET /api/settings</code> - Paramètres du système</li>
-    </ul>
-    <p>Consultez la documentation dans le dossier <code>docs/</code> pour plus d'informations.</p>
+  <div class="card">
+    <h2>Analyse des tendances</h2>
+    <div class="stats">
+      <div class="stat-box">
+        <h3>Score moyen</h3>
+        <p id="average-score">--</p>
+      </div>
+      <div class="stat-box">
+        <h3>Taux d'indexation</h3>
+        <p id="index-rate">--</p>
+      </div>
+      <div class="stat-box">
+        <h3>Catégories</h3>
+        <p id="categories-count">--</p>
+      </div>
+    </div>
+    <div class="chart-container">
+      <canvas id="trends-chart"></canvas>
+    </div>
+  </div>
+
+  <div class="dashboard">
+    <div class="card">
+      <h2>Répartition par recommandation</h2>
+      <div class="chart-container" style="height: 250px;">
+        <canvas id="recommendations-chart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Top catégories de produits</h2>
+      <div class="chart-container" style="height: 250px;">
+        <canvas id="categories-chart"></canvas>
+      </div>
+    </div>
   </div>
 
   <footer>
@@ -194,8 +259,28 @@
       });
     }
 
-    // Fonction pour charger les données
-    async function loadData() {
+    // Fonction pour obtenir le label d'une recommandation
+    function getRecommendationLabel(recommendation) {
+      switch(recommendation) {
+        case 'index': return 'À indexer';
+        case 'watch': return 'À surveiller';
+        case 'skip': return 'À ignorer';
+        default: return 'Non analysé';
+      }
+    }
+
+    // Fonction pour obtenir la classe CSS d'une recommandation
+    function getRecommendationClass(recommendation) {
+      switch(recommendation) {
+        case 'index': return 'recommendation-index';
+        case 'watch': return 'recommendation-watch';
+        case 'skip': return 'recommendation-skip';
+        default: return '';
+      }
+    }
+
+    // Charger les données générales
+    async function loadOverviewData() {
       try {
         // Charger le nombre de produits
         const productsResponse = await fetch('/api/products');
@@ -208,29 +293,50 @@
         const trendsResponse = await fetch('/api/trends');
         if (trendsResponse.ok) {
           const trendsData = await trendsResponse.json();
-          const trendsTable = document.getElementById('trending-products').querySelector('tbody');
           
-          if (trendsData.length > 0) {
-            trendsTable.innerHTML = '';
-            trendsData.slice(0, 5).forEach(product => {
-              trendsTable.innerHTML += `
-                <tr>
-                  <td>${product.title}</td>
-                  <td>${product.score}</td>
-                  <td>${product.catalogStatus}</td>
-                </tr>
-              `;
-            });
-          } else {
-            trendsTable.innerHTML = '<tr><td colspan="3">Aucune tendance disponible</td></tr>';
-          }
-
           // Compter les recommandations
           const indexCount = trendsData.filter(p => p.recommendation === 'index').length;
           const watchCount = trendsData.filter(p => p.recommendation === 'watch').length;
           
           document.getElementById('index-count').textContent = indexCount;
           document.getElementById('watch-count').textContent = watchCount;
+
+          // Calculer le score moyen
+          const totalScore = trendsData.reduce((sum, p) => sum + (p.score || 0), 0);
+          const averageScore = trendsData.length > 0 ? Math.round(totalScore / trendsData.length) : 0;
+          document.getElementById('average-score').textContent = `${averageScore}/100`;
+
+          // Calculer le taux d'indexation
+          const indexRate = trendsData.length > 0 ? Math.round((indexCount / trendsData.length) * 100) : 0;
+          document.getElementById('index-rate').textContent = `${indexRate}%`;
+
+          // Remplir le tableau des produits tendance
+          const trendsTable = document.getElementById('trending-products').querySelector('tbody');
+          
+          if (trendsData.length > 0) {
+            trendsTable.innerHTML = '';
+            trendsData.slice(0, 5).forEach(product => {
+              const recommendation = product.recommendation || 'none';
+              trendsTable.innerHTML += `
+                <tr>
+                  <td>${product.title}</td>
+                  <td>${product.score || 0}</td>
+                  <td><span class="product-recommendation ${getRecommendationClass(recommendation)}">
+                    ${getRecommendationLabel(recommendation)}
+                  </span></td>
+                </tr>
+              `;
+            });
+          } else {
+            trendsTable.innerHTML = '<tr><td colspan="3">Aucune tendance disponible</td></tr>';
+          }
+        }
+
+        // Charger les catégories
+        const categoriesResponse = await fetch('/api/trends/categories');
+        if (categoriesResponse.ok) {
+          const categoriesData = await categoriesResponse.json();
+          document.getElementById('categories-count').textContent = categoriesData.length || '0';
         }
 
         // Simuler des dates de crawling pour la démo
@@ -246,6 +352,222 @@
       }
     }
 
+    // Charger et afficher le graphique des tendances
+    async function loadTrendsChart() {
+      try {
+        const response = await fetch('/api/trends/history');
+        if (response.ok) {
+          const data = await response.json();
+          
+          // Si on n'a pas de données historiques, utiliser des données fictives
+          const chartData = data.length > 0 ? data : generateMockHistoryData();
+          
+          const ctx = document.getElementById('trends-chart').getContext('2d');
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: chartData.map(item => item.date),
+              datasets: [
+                {
+                  label: 'Score moyen',
+                  data: chartData.map(item => item.averageScore),
+                  borderColor: '#3498db',
+                  backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                  tension: 0.4,
+                  fill: true
+                },
+                {
+                  label: 'Produits découverts',
+                  data: chartData.map(item => item.count),
+                  borderColor: '#2ecc71',
+                  backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                  tension: 0.4,
+                  fill: true,
+                  yAxisID: 'y1'
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  max: 100,
+                  title: {
+                    display: true,
+                    text: 'Score moyen'
+                  }
+                },
+                y1: {
+                  beginAtZero: true,
+                  position: 'right',
+                  grid: {
+                    drawOnChartArea: false
+                  },
+                  title: {
+                    display: true,
+                    text: 'Nombre de produits'
+                  }
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Date'
+                  }
+                }
+              }
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Erreur lors du chargement du graphique des tendances:', error);
+        // Utiliser des données fictives en cas d'erreur
+        const chartData = generateMockHistoryData();
+        const ctx = document.getElementById('trends-chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: chartData.map(item => item.date),
+            datasets: [
+              {
+                label: 'Score moyen',
+                data: chartData.map(item => item.averageScore),
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4,
+                fill: true
+              },
+              {
+                label: 'Produits découverts',
+                data: chartData.map(item => item.count),
+                borderColor: '#2ecc71',
+                backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                tension: 0.4,
+                fill: true,
+                yAxisID: 'y1'
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: 'Score moyen'
+                }
+              },
+              y1: {
+                beginAtZero: true,
+                position: 'right',
+                grid: {
+                  drawOnChartArea: false
+                },
+                title: {
+                  display: true,
+                  text: 'Nombre de produits'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Date'
+                }
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // Charger et afficher le graphique des recommandations
+    function loadRecommendationsChart() {
+      // Générer des données de démo
+      const data = {
+        labels: ['À indexer', 'À surveiller', 'À ignorer'],
+        datasets: [{
+          data: [35, 45, 20],
+          backgroundColor: ['#2ecc71', '#f39c12', '#e74c3c'],
+          hoverBackgroundColor: ['#27ae60', '#e67e22', '#c0392b']
+        }]
+      };
+      
+      const ctx = document.getElementById('recommendations-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'pie',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'right'
+            }
+          }
+        }
+      });
+    }
+
+    // Charger et afficher le graphique des catégories
+    function loadCategoriesChart() {
+      // Générer des données de démo
+      const data = {
+        labels: ['Accessoires', 'Gadgets', 'Montres', 'Électronique', 'Cuisine', 'Décoration'],
+        datasets: [{
+          label: 'Score moyen',
+          data: [85, 78, 72, 68, 65, 60],
+          backgroundColor: '#3498db'
+        }]
+      };
+      
+      const ctx = document.getElementById('categories-chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: 'y',
+          scales: {
+            x: {
+              beginAtZero: true,
+              max: 100,
+              title: {
+                display: true,
+                text: 'Score moyen'
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Générer des données historiques fictives
+    function generateMockHistoryData() {
+      const today = new Date();
+      const data = [];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(today.getDate() - i);
+        const formattedDate = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+        
+        // Générer des données aléatoires mais cohérentes
+        data.push({
+          date: formattedDate,
+          averageScore: Math.floor(60 + Math.random() * 20),
+          count: Math.floor(10 + Math.random() * 30),
+          recommended: Math.floor(5 + Math.random() * 15)
+        });
+      }
+      
+      return data;
+    }
+
     // Gestion du bouton de crawling
     document.getElementById('start-crawl-btn').addEventListener('click', async function(e) {
       e.preventDefault();
@@ -253,10 +575,22 @@
       this.style.backgroundColor = '#7f8c8d';
       
       try {
-        // Simuler un crawling
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        alert('Crawling lancé avec succès!\nLes résultats seront disponibles dans quelques minutes.');
+        // Appeler l'API pour lancer un crawling
+        const response = await fetch('/api/crawl', {
+          method: 'POST'
+        });
+        
+        if (response.ok) {
+          alert('Crawling lancé avec succès!\nLes résultats seront disponibles dans quelques minutes.');
+          // Recharger les données après un délai pour laisser le temps au crawling de s'exécuter
+          setTimeout(() => {
+            loadOverviewData();
+          }, 3000);
+        } else {
+          throw new Error('Erreur lors du lancement du crawling');
+        }
       } catch (error) {
+        console.error('Erreur:', error);
         alert('Erreur lors du lancement du crawling: ' + error.message);
       } finally {
         this.textContent = 'Lancer un crawling';
@@ -264,8 +598,13 @@
       }
     });
 
-    // Charger les données au chargement de la page
-    window.addEventListener('load', loadData);
+    // Chargement initial des données
+    window.addEventListener('load', () => {
+      loadOverviewData();
+      loadTrendsChart();
+      loadRecommendationsChart();
+      loadCategoriesChart();
+    });
   </script>
 </body>
 </html>
