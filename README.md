@@ -170,21 +170,18 @@ To integrate this system with your dropshipping platform, you can:
 3. Use the REST API to develop your own user interface.
 
 ## Screenshots
+<img width="1212" alt="Capture d’écran 2025-02-26 à 14 41 11" src="https://github.com/user-attachments/assets/df020f38-fc52-43f0-8453-38d917718dbe" />
+<img width="1200" alt="Capture d’écran 2025-02-26 à 14 41 36" src="https://github.com/user-attachments/assets/bb5a8dce-e494-4305-b9f4-baf242725142" />
+<img width="1213" alt="Capture d’écran 2025-02-26 à 14 41 56" src="https://github.com/user-attachments/assets/8f58d93b-c657-4d26-8622-7ac59f4f3c44" />
 
-<table>
-  <tr>
-    <td><img src="https://via.placeholder.com/400x225.png?text=Dashboard" alt="Dashboard"/></td>
-    <td><img src="https://via.placeholder.com/400x225.png?text=Product+Management" alt="Product Management"/></td>
-  </tr>
-  <tr>
-    <td><img src="https://via.placeholder.com/400x225.png?text=Trend+Analysis" alt="Trend Analysis"/></td>
-    <td><img src="https://via.placeholder.com/400x225.png?text=Configuration" alt="Configuration"/></td>
-  </tr>
-</table>
+<img width="994" alt="Capture d’écran 2025-02-26 à 14 43 02" src="https://github.com/user-attachments/assets/d84ebb18-6e64-4856-8b78-4408e351e68c" />
+<img width="1489" alt="Capture d’écran 2025-02-26 à 14 43 28" src="https://github.com/user-attachments/assets/287a5a7c-df1a-4b3f-9cc3-5cfb9a1a0c60" />
+
 
 ## Future development
 
-See the task list in the [TASKS.md](TASKS.md) file for features planned for future releases.
+See the task list in the [TASKS.md](TASKS.md) file for features planned for future releases. 
+
 
 ## Documentation
 
