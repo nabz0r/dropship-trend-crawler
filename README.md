@@ -134,7 +134,7 @@ See the task list in the [TASKS.md](TASKS.md) file for features planned for futu
 
 See the `docs/` folder for detailed information on:
 
-- [How the system works](docs/how.md)
+- [How the system works](docs/fonctionnement.md)
 - Using the [Brave Search API](docs/brave_api.md)
 - [Installing MongoDB](docs/mongodb-installation.md)
 
