@@ -1,7 +1,28 @@
+/**
+ * Service d'analyse des produits découverts
+ * Détermine le potentiel des produits pour le dropshipping en utilisant un algorithme de scoring multi-facteurs
+ */
 const logger = require('../utils/logger');
 const { getUnanalyzedProducts, updateProductAnalysis } = require('../models/product');
+const { AppError, catchAsync } = require('../utils/errorHandler');
 const fs = require('fs').promises;
 const path = require('path');
+
+// Import des utilitaires d'analyse
+const {
+  detectProductCategory,
+  generateRecommendationReasons,
+  estimatePriceAndMargin,
+  getMockProducts
+} = require('./analyzerUtils');
+
+// Import des fonctions de scoring
+const {
+  calculatePopularityScore,
+  calculateProfitabilityScore,
+  calculateCompetitionScore,
+  calculateSeasonalityScore
+} = require('./analyzerScoring');
 
 // Chemin vers le fichier de configuration local
 const CONFIG_FILE = path.join(process.cwd(), 'config', 'crawler-settings.json');
@@ -31,71 +52,50 @@ async function loadSettings() {
 
 /**
  * Analyse les produits découverts pour déterminer leur potentiel
+ * Utilise le catchAsync pour une gestion centralisée des erreurs
  */
-async function setupAnalyzerJob() {
+const setupAnalyzerJob = catchAsync(async () => {
+  logger.info('Démarrage de l\'analyseur de produits');
+  
+  // Récupérer les produits non encore analysés
+  let products = [];
   try {
-    logger.info('Démarrage de l\'analyseur de produits');
-    
-    // Récupérer les produits non encore analysés
-    let products = [];
-    try {
-      products = await getUnanalyzedProducts();
-    } catch (error) {
-      logger.error(`Erreur lors de la récupération des produits: ${error.message}`);
-      logger.info('Utilisation de produits fictifs pour le développement.');
-      products = getMockProducts(5);
-    }
-    
-    logger.info(`${products.length} produits à analyser`);
-    let analyzedCount = 0;
-    
-    for (const product of products) {
-      try {
-        // Analyser chaque produit
-        const analysis = await analyzeProduct(product);
-        
-        // Mettre à jour la base de données avec les résultats
-        if (product._id) {
-          await updateProductAnalysis(product._id, analysis);
-        }
-        
-        analyzedCount++;
-      } catch (error) {
-        logger.error(`Erreur lors de l'analyse du produit ${product._id || 'sans ID'}: ${error.message}`);
-      }
-    }
-    
-    logger.info(`Analyse des produits terminée. ${analyzedCount}/${products.length} produits analysés avec succès.`);
-    return { total: products.length, analyzed: analyzedCount };
+    products = await getUnanalyzedProducts();
   } catch (error) {
-    logger.error(`Erreur dans l'analyseur: ${error.message}`);
-    throw error;
-  }
-}
-
-/**
- * Génère des produits fictifs pour le développement
- */
-function getMockProducts(count) {
-  const mockProducts = [];
-  const productTypes = ['Montre connectée', 'Lampe LED', 'Écouteurs sans fil', 'Organisateur de bureau', 
-                       'Gadget de cuisine', 'Accessoire pour smartphone', 'Porte-clés intelligent', 'Chargeur rapide'];
-  
-  for (let i = 0; i < count; i++) {
-    const productType = productTypes[Math.floor(Math.random() * productTypes.length)];
-    mockProducts.push({
-      _id: `mock-${i + 1}`,
-      title: `${productType} - Produit ${i + 1}`,
-      description: `Découvrez ce ${productType.toLowerCase()} parfait pour le dropshipping. Fort potentiel de vente avec des marges intéressantes.`,
-      url: `https://example.com/product-${i + 1}`,
-      source: 'mock_data',
-      query: 'produits tendance dropshipping',
-      discoveredAt: new Date()
-    });
+    logger.error(`Erreur lors de la récupération des produits: ${error.message}`);
+    logger.info('Utilisation de produits fictifs pour le développement.');
+    products = getMockProducts(5);
   }
   
-  return mockProducts;
-}
+  logger.info(`${products.length} produits à analyser`);
+  
+  // Analyser les produits en parallèle pour de meilleures performances
+  const analysisPromises = products.map(async product => {
+    try {
+      // Analyser chaque produit
+      const analysis = await analyzeProduct(product);
+      
+      // Mettre à jour la base de données avec les résultats
+      if (product._id) {
+        await updateProductAnalysis(product._id, analysis);
+      }
+      
+      return { success: true, productId: product._id };
+    } catch (error) {
+      logger.error(`Erreur lors de l'analyse du produit ${product._id || 'sans ID'}: ${error.message}`);
+      return { success: false, productId: product._id, error: error.message };
+    }
+  });
+  
+  // Attendre que toutes les analyses soient terminées
+  const results = await Promise.allSettled(analysisPromises);
+  
+  const successful = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+  const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+  
+  logger.info(`Analyse des produits terminée. ${successful} produits analysés avec succès, ${failed} échecs.`);
+  return { total: products.length, analyzed: successful, failed };
+});
 
 /**
  * Analyse un produit spécifique pour déterminer son potentiel
@@ -114,16 +114,13 @@ async function analyzeProduct(product) {
       seasonality: 0.1
     };
     
-    // Analyse de popularité (simulation)
-    const popularityScore = calculatePopularityScore(product);
+    // Détecter la catégorie du produit
+    const categoryInfo = detectProductCategory(product);
     
-    // Analyse de rentabilité (simulation)
-    const profitabilityScore = calculateProfitabilityScore(product);
-    
-    // Analyse de concurrence (simulation)
-    const competitionScore = calculateCompetitionScore(product);
-    
-    // Analyse de saisonnalité (simulation)
+    // Analyse des facteurs du produit
+    const popularityScore = await calculatePopularityScore(product);
+    const profitabilityScore = calculateProfitabilityScore(product, categoryInfo);
+    const competitionScore = calculateCompetitionScore(product, categoryInfo);
     const seasonalityScore = calculateSeasonalityScore(product);
     
     // Calcul du score pondéré
@@ -146,15 +143,33 @@ async function analyzeProduct(product) {
       recommendation = 'skip';
     }
     
+    // Générer des raisons détaillées de la recommandation
+    const reasons = generateRecommendationReasons(
+      product,
+      categoryInfo, 
+      popularityScore, 
+      profitabilityScore, 
+      competitionScore, 
+      seasonalityScore,
+      recommendation
+    );
+    
+    // Estimer des données de prix et de marge potentielle
+    const priceEstimation = estimatePriceAndMargin(product, categoryInfo);
+    
     return {
       score: finalScore,
       recommendation,
-      reasons: [
-        `Score de popularité: ${popularityScore}/100`,
-        `Score de rentabilité: ${profitabilityScore}/100`,
-        `Score de concurrence: ${competitionScore}/100`,
-        `Score de saisonnalité: ${seasonalityScore}/100`
-      ],
+      category: categoryInfo.category,
+      categoryConfidence: Math.round(categoryInfo.confidence * 100),
+      factors: {
+        popularity: popularityScore,
+        profitability: profitabilityScore,
+        competition: competitionScore,
+        seasonality: seasonalityScore
+      },
+      reasons,
+      priceEstimation,
       analyzedAt: new Date()
     };
   } catch (error) {
@@ -166,177 +181,6 @@ async function analyzeProduct(product) {
       analyzedAt: new Date()
     };
   }
-}
-
-/**
- * Calcul du score de popularité (simulation)
- */
-function calculatePopularityScore(product) {
-  // En production, on pourrait utiliser des APIs de réseaux sociaux, Google Trends, etc.
-  // Pour l'instant, on simule avec des valeurs aléatoires et quelques heuristiques
-  
-  let score = 50; // Score de base
-  
-  // Analyse du titre et de la description
-  const content = (product.title + ' ' + (product.description || '')).toLowerCase();
-  
-  // Mots-clés indiquant la popularité
-  const popularityKeywords = ['populaire', 'tendance', 'viral', 'trending', 'popular', 'best-seller', 'hot'];
-  
-  popularityKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score += 5;
-    }
-  });
-  
-  // Ajuster avec un facteur aléatoire pour la simulation
-  const randomFactor = Math.floor(Math.random() * 30) - 10; // -10 à +20
-  score += randomFactor;
-  
-  // S'assurer que le score est dans la plage 0-100
-  return Math.max(0, Math.min(100, score));
-}
-
-/**
- * Calcul du score de rentabilité (simulation)
- */
-function calculateProfitabilityScore(product) {
-  // En production, on pourrait utiliser des APIs de prix, des données de fournisseurs, etc.
-  // Pour l'instant, on simule avec des valeurs aléatoires et quelques heuristiques
-  
-  let score = 60; // Score de base
-  
-  // Analyse du titre et de la description
-  const content = (product.title + ' ' + (product.description || '')).toLowerCase();
-  
-  // Mots-clés indiquant une bonne rentabilité
-  const profitabilityKeywords = ['profit', 'marge', 'rentable', 'profitable', 'low cost', 'high margin'];
-  
-  profitabilityKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score += 5;
-    }
-  });
-  
-  // Catégories généralement rentables
-  const profitableCategories = ['montre', 'bijou', 'accessoire', 'gadget', 'watch', 'jewelry'];
-  
-  profitableCategories.forEach(category => {
-    if (content.includes(category)) {
-      score += 3;
-    }
-  });
-  
-  // Ajuster avec un facteur aléatoire pour la simulation
-  const randomFactor = Math.floor(Math.random() * 25) - 5; // -5 à +20
-  score += randomFactor;
-  
-  // S'assurer que le score est dans la plage 0-100
-  return Math.max(0, Math.min(100, score));
-}
-
-/**
- * Calcul du score de concurrence (simulation)
- * Un score élevé signifie une faible concurrence (c'est positif)
- */
-function calculateCompetitionScore(product) {
-  // En production, on pourrait analyser le nombre de vendeurs, les prix moyens, etc.
-  // Pour l'instant, on simule avec des valeurs aléatoires et quelques heuristiques
-  
-  let score = 40; // Score de base (la concurrence est généralement forte)
-  
-  // Analyse du titre et de la description
-  const content = (product.title + ' ' + (product.description || '')).toLowerCase();
-  
-  // Mots-clés indiquant une niche moins concurrentielle
-  const lowCompetitionKeywords = ['unique', 'niche', 'spécialisé', 'nouveau', 'innovant', 'breveté'];
-  
-  lowCompetitionKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score += 8;
-    }
-  });
-  
-  // Mots-clés indiquant une forte concurrence
-  const highCompetitionKeywords = ['populaire', 'classique', 'basique', 'standard'];
-  
-  highCompetitionKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score -= 5;
-    }
-  });
-  
-  // Ajuster avec un facteur aléatoire pour la simulation
-  const randomFactor = Math.floor(Math.random() * 30) - 10; // -10 à +20
-  score += randomFactor;
-  
-  // S'assurer que le score est dans la plage 0-100
-  return Math.max(0, Math.min(100, score));
-}
-
-/**
- * Calcul du score de saisonnalité (simulation)
- * Un score élevé signifie que le produit est actuellement en saison
- */
-function calculateSeasonalityScore(product) {
-  // En production, on pourrait analyser les tendances saisonnières réelles
-  // Pour l'instant, on simule avec des valeurs aléatoires et le mois actuel
-  
-  let score = 50; // Score de base
-  
-  // Analyse du titre et de la description
-  const content = (product.title + ' ' + (product.description || '')).toLowerCase();
-  
-  // Mois actuel
-  const currentMonth = new Date().getMonth(); // 0-11
-  
-  // Produits saisonniers par mois (simplifié)
-  const seasonalProducts = {
-    0: ['hiver', 'ski', 'neige', 'écharpe'], // Janvier
-    1: ['hiver', 'saint-valentin', 'amour'], // Février
-    2: ['printemps', 'jardin', 'pâques'], // Mars
-    3: ['printemps', 'jardin', 'pâques', 'plein air'], // Avril
-    4: ['printemps', 'jardin', 'fête des mères'], // Mai
-    5: ['été', 'plage', 'vacances', 'fête des pères'], // Juin
-    6: ['été', 'plage', 'vacances', 'piscine'], // Juillet
-    7: ['été', 'plage', 'vacances', 'voyage'], // Août
-    8: ['rentrée', 'école', 'automne'], // Septembre
-    9: ['automne', 'halloween'], // Octobre
-    10: ['hiver', 'noël', 'black friday'], // Novembre
-    11: ['hiver', 'noël', 'fêtes', 'cadeau'] // Décembre
-  };
-  
-  // Vérifier si le produit correspond à la saison actuelle
-  const currentSeasonKeywords = seasonalProducts[currentMonth] || [];
-  const nextMonthKeywords = seasonalProducts[(currentMonth + 1) % 12] || [];
-  
-  currentSeasonKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score += 10;
-    }
-  });
-  
-  nextMonthKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score += 5; // Bon de se préparer pour la prochaine saison
-    }
-  });
-  
-  // Produits toujours à la mode
-  const everGreenKeywords = ['intemporel', 'classique', 'essentiel', 'basic', 'evergreen'];
-  
-  everGreenKeywords.forEach(keyword => {
-    if (content.includes(keyword)) {
-      score += 3;
-    }
-  });
-  
-  // Ajuster avec un facteur aléatoire pour la simulation
-  const randomFactor = Math.floor(Math.random() * 20) - 5; // -5 à +15
-  score += randomFactor;
-  
-  // S'assurer que le score est dans la plage 0-100
-  return Math.max(0, Math.min(100, score));
 }
 
 module.exports = { setupAnalyzerJob, analyzeProduct };
