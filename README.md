@@ -2,6 +2,9 @@
 
 Un système automatisé de crawling web pour l'identification de produits tendance pour le dropshipping.
 
+<img width="1224" alt="Capture d’écran 2025-02-26 à 12 41 28" src="https://github.com/user-attachments/assets/d53551bd-2636-41ff-84b5-1417969844f6" />
+
+
 ## Objectif
 
 Ce projet vise à développer une application web qui :
@@ -120,7 +123,14 @@ Consultez le dossier `docs/` pour des informations détaillées sur :
 - L'architecture du système
 - Les bonnes pratiques pour le dropshipping
 
-## Licence
+## 🤝 Contribution
+We Welcome: 💻 Network Engineers 👀 Research Scientists 🌎 Cloud Architects 🤖 AI/ML Specialists
+
+## 📞 Contact
+Email: nabz0r@gmail.com GitHub: @nabz0r
+
+## 📜 License
+MIT License - Innovation without Boundaries
 
 MIT
 
