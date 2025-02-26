@@ -122,7 +122,7 @@ Pour intégrer ce système à votre plateforme de dropshipping, vous pouvez :
 
 3. Utiliser l'API REST pour développer votre propre interface utilisateur.
 
-## Développement futur
+## Développement futur 
 
 Voir la liste des tâches dans le fichier [TASKS.md](TASKS.md) pour les fonctionnalités prévues pour les prochaines versions.
 
@@ -134,10 +134,11 @@ Consultez le dossier `docs/` pour des informations détaillées sur :
 - L'utilisation de l'[API Brave Search](docs/brave_api.md)
 - L'[architecture du système](docs/architecture.md)
 
-## Licence
+## 🤝 Contribution
+We Welcome: 💻 Network Engineers 👀 Research Scientists 🌎 Cloud Architects 🤖 AI/ML Specialists
 
-MIT
+## 📞 Contact
+Email: nabz0r@gmail.com GitHub: @nabz0r
 
-## Contact
-
-Pour toute question ou suggestion, n'hésitez pas à ouvrir une issue sur ce dépôt GitHub.
+## 📜 License
+MIT License - Innovation without Boundaries
