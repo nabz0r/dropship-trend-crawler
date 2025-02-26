@@ -2,6 +2,8 @@
 
 Un système automatisé qui utilise l'API Brave Search pour identifier des produits tendance pour le dropshipping.
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-nabz0r-yellow?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://buymeacoffee.com/nabz0r)
+
 ## Fonctionnement
 
 Contrairement à un crawler web traditionnel, ce système utilise l'API Brave Search pour découvrir des produits potentiels en effectuant des recherches ciblées. Le processus se déroule en trois étapes principales :
@@ -137,10 +139,21 @@ Consultez le dossier `docs/` pour des informations détaillées sur :
 - L'[architecture du système](docs/architecture.md)
 - L'[installation de MongoDB](docs/mongodb-installation.md)
 
-## Licence
 
-MIT
+## 🤝 Contribution
 
-## Contact
+We welcome :
+- 💻 Network Engineers
+- 👀 Research Scientists  
+- 🌎 Cloud Architects
+- 🤖 AI/ML Specialists
 
-Pour toute question ou suggestion, n'hésitez pas à ouvrir une issue sur ce dépôt GitHub.
+## 📱 Contact
+
+- 📧 Email: nabz0r@gmail.com
+- 🐙 GitHub: [@nabz0r](https://github.com/nabz0r)
+
+## 📄 Licence
+
+MIT License - Innovation without Boundaries
+
