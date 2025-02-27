@@ -236,9 +236,91 @@ docker stats
 # Éditer le fichier et ajuster les limites de mémoire et CPU
 ```
 
+## Sécurisation supplémentaire
+
+### Configuration d'un pare-feu
+
+Il est recommandé de configurer un pare-feu pour limiter l'accès aux ports nécessaires uniquement :
+
+```bash
+# Installation de UFW (Uncomplicated Firewall)
+sudo apt install -y ufw
+
+# Autoriser SSH pour éviter de perdre l'accès au serveur
+sudo ufw allow ssh
+
+# Autoriser HTTP et HTTPS
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+
+# Activer le pare-feu
+sudo ufw enable
+```
+
+### Protection des services internes
+
+Assurez-vous que les services comme MongoDB et mongo-express ne sont pas accessibles directement depuis l'extérieur :
+
+1. Modifiez le fichier `docker-compose.yml` pour ne pas publier les ports internes sur l'interface externe :
+
+```yaml
+mongodb:
+  # Au lieu de
+  # ports:
+  #   - "27017:27017"
+  # Utilisez
+  expose:
+    - "27017"
+```
+
+2. Utilisez un réseau reverse proxy dédié pour Nginx :
+
+```yaml
+networks:
+  dropship-network:
+    internal: true  # Réseau interne non accessible de l'extérieur
+  web:
+    external: true  # Réseau partagé avec Nginx
+```
+
+## Automatisation et CI/CD
+
+Pour automatiser le déploiement via GitHub Actions :
+
+1. Créez un fichier `.github/workflows/deploy.yml` :
+
+```yaml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to production server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          script: |
+            cd dropship-trend-crawler
+            git pull
+            ./deploy.sh
+```
+
+2. Configurez les secrets dans votre dépôt GitHub :
+   - `HOST` : Adresse IP ou nom d'hôte de votre serveur
+   - `USERNAME` : Nom d'utilisateur pour la connexion SSH
+   - `SSH_KEY` : Clé SSH privée pour l'authentification
+
 ## Ressources additionnelles
 
 - [Documentation Docker](https://docs.docker.com/)
 - [Documentation Docker Compose](https://docs.docker.com/compose/)
 - [Documentation MongoDB](https://docs.mongodb.com/)
 - [Documentation Nginx](https://nginx.org/en/docs/)
+- [Guide de sécurité Docker](https://docs.docker.com/engine/security/security/)
