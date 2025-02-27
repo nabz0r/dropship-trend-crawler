@@ -1,0 +1,44 @@
+# Fichiers de contrôle de version
+.git
+.gitignore
+.github
+
+# Dépendances
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Environnement
+.env
+.env.*
+!.env.example
+
+# Documentation
+README.md
+TASKS.md
+docs
+*.md
+
+# Fichiers de développement
+*.log
+logs
+*.swp
+.DS_Store
+.vscode
+.idea
+.editorconfig
+
+# Tests
+test
+coverage
+.nyc_output
+
+# Fichiers Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Fichiers temporaires
+tmp
+temp

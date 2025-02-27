@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  # Service principal : l'application Node.js
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: dropship-trend-crawler:latest
+    container_name: dropship-crawler-app
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/dropship-crawler
+      - BRAVE_API_KEY=${BRAVE_API_KEY}
+      - LOG_LEVEL=info
+      - CRAWL_INTERVAL=3600000
+    volumes:
+      - ./config:/app/config
+      - app_logs:/app/logs
+    networks:
+      - dropship-network
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # Base de données MongoDB
+  mongodb:
+    image: mongo:6
+    container_name: dropship-crawler-mongodb
+    restart: unless-stopped
+    environment:
+      - MONGO_INITDB_DATABASE=dropship-crawler
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    ports:
+      - "27017:27017"
+    networks:
+      - dropship-network
+    command: ["--wiredTigerCacheSizeGB", "1"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Moniteur pour MongoDB (optionnel)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: dropship-crawler-mongo-express
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+      - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_BASICAUTH_USERNAME=${MONGO_EXPRESS_USER:-admin}
+      - ME_CONFIG_BASICAUTH_PASSWORD=${MONGO_EXPRESS_PASSWORD:-password}
+    networks:
+      - dropship-network
+
+volumes:
+  mongodb_data:
+  mongodb_config:
+  app_logs:
+
+networks:
+  dropship-network:
+    driver: bridge
