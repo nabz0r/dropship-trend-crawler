@@ -210,8 +210,8 @@ The REST API exposes the following endpoints:
 | `/api/settings/reset` | GET | Reset to default |
 | `/api/crawl` | POST | Manually trigger a crawl |
 | `/api/integrations/test` | GET | Test the e-commerce integration connection |
-| `/api/integrations/status | GET | Get integration status |
-| `/api/integrations/search-aliexpress | POST | Search for products on AliExpress |
+| `/api/integrations/status` | GET | Get integration status |
+| `/api/integrations/search-aliexpress` | POST | Search for products on AliExpress |
 
 ## Integrating with your dropshipping system
 
