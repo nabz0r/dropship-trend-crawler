@@ -2,7 +2,11 @@
  * Module d'intégration avec WooCommerce
  * Permet d'ajouter et de supprimer des produits dans une boutique WooCommerce
  */
-const WooCommerceRestApi = require('@woocommerce/woocommerce-rest-api').default;
+
+import pkg from '@woocommerce/woocommerce-rest-api';
+const WooCommerceRestApi = pkg.default;
+
+// const WooCommerceRestApi = require('@woocommerce/woocommerce-rest-api').default;
 const logger = require('../utils/logger');
 
 class WooCommerceIntegration {
