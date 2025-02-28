@@ -7,15 +7,30 @@ const logger = require('../utils/logger');
 
 class ShopifyIntegration {
   constructor(config) {
+    // Vérifier que les paramètres nécessaires sont présents
+    if (!config.apiKey || !config.password || !config.storeName) {
+      this.isInitialized = false;
+      logger.error('Configuration Shopify incomplète: apiKey, password et storeName sont requis');
+      return;
+    }
+    
     this.apiKey = config.apiKey;
     this.password = config.password;
     this.storeName = config.storeName;
     this.apiVersion = '2023-10'; // Version de l'API Shopify
     this.baseUrl = `https://${this.apiKey}:${this.password}@${this.storeName}.myshopify.com/admin/api/${this.apiVersion}`;
+    this.isInitialized = true;
+    
+    logger.info('Intégration Shopify initialisée avec succès');
   }
 
   async addProduct(product) {
     try {
+      // Vérifier si l'intégration a été initialisée
+      if (!this.isInitialized) {
+        throw new Error('Intégration Shopify non initialisée');
+      }
+      
       const shopifyProduct = this._formatProductForShopify(product);
       
       const response = await axios.post(
@@ -37,6 +52,11 @@ class ShopifyIntegration {
 
   async removeProduct(catalogId) {
     try {
+      // Vérifier si l'intégration a été initialisée
+      if (!this.isInitialized) {
+        throw new Error('Intégration Shopify non initialisée');
+      }
+      
       await axios.delete(`${this.baseUrl}/products/${catalogId}.json`);
       
       logger.info(`Produit supprimé de Shopify: ${catalogId}`);
@@ -50,8 +70,8 @@ class ShopifyIntegration {
   _formatProductForShopify(product) {
     // Transformer notre modèle de produit en format Shopify
     return {
-      title: product.title,
-      body_html: product.description,
+      title: product.title || 'Produit sans titre',
+      body_html: product.description || '',
       vendor: product.metadata?.brand || 'DropShip Trend',
       product_type: product.metadata?.category || 'General',
       images: product.metadata?.imageUrl ? [{ src: product.metadata.imageUrl }] : [],
