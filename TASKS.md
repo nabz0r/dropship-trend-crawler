@@ -144,6 +144,7 @@ gantt
     Advanced Features         :future, adv, after sec, 2M
     Analytics & Reporting     :future, report, after adv, 1M
     Mobile & Accessibility    :future, mobile, after report, 1M
+```
 
 ## Development Statistics
 
