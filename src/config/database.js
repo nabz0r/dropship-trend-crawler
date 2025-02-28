@@ -43,9 +43,9 @@ async function connectDatabase() {
     
     // Journaliser les détails additionnels pour le débogage
     if (error.name === 'MongoServerSelectionError') {
-      logger.error('Erreur de connexion au serveur MongoDB. Vérifiez que MongoDB est en cours d'exécution.');
+      logger.error("Erreur de connexion au serveur MongoDB. Vérifiez que MongoDB est en cours d'exécution.");
     } else if (error.name === 'MongoParseError') {
-      logger.error('URI de connexion MongoDB invalide. Vérifiez votre configuration MONGODB_URI.');
+      logger.error("URI de connexion MongoDB invalide. Vérifiez votre configuration MONGODB_URI.");
     }
     
     // En mode développement, ne pas quitter l'application pour permettre le fonctionnement en mode démo
