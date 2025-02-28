@@ -3,8 +3,40 @@ const { getProductsByRecommendation, updateCatalogStatus } = require('../models/
 const fs = require('fs').promises;
 const path = require('path');
 
+// Importation des intégrations
+const ShopifyIntegration = require('../integrations/shopify');
+const WooCommerceIntegration = require('../integrations/woocommerce');
+const AliExpressIntegration = require('../integrations/aliexpress');
+
 // Chemin vers le fichier de configuration local
 const CONFIG_FILE = path.join(process.cwd(), 'config', 'crawler-settings.json');
+
+// Initialisation des intégrations
+let shopifyIntegration = null;
+let wooCommerceIntegration = null;
+let aliExpressIntegration = null;
+
+async function initIntegrations(settings) {
+  const integrations = settings.integrations || {};
+  
+  // Initialiser Shopify si configuré
+  if (integrations.shopify && integrations.shopify.enabled) {
+    shopifyIntegration = new ShopifyIntegration(integrations.shopify);
+    logger.info('Intégration Shopify initialisée');
+  }
+  
+  // Initialiser WooCommerce si configuré
+  if (integrations.woocommerce && integrations.woocommerce.enabled) {
+    wooCommerceIntegration = new WooCommerceIntegration(integrations.woocommerce);
+    logger.info('Intégration WooCommerce initialisée');
+  }
+  
+  // Initialiser AliExpress si configuré
+  if (integrations.aliexpress && integrations.aliexpress.enabled) {
+    aliExpressIntegration = new AliExpressIntegration(integrations.aliexpress);
+    logger.info('Intégration AliExpress initialisée');
+  }
+}
 
 // Fonction utilitaire pour charger les paramètres
 async function loadSettings() {
@@ -19,6 +51,9 @@ async function loadSettings() {
         autoIndex: true,
         autoDeindex: false,
         minPerformanceDays: 14
+      },
+      integrations: {
+        platform: 'none'  // 'shopify', 'woocommerce', ou 'none'
       }
     };
   }
@@ -34,6 +69,9 @@ async function setupCatalogManager() {
     // Charger les paramètres de configuration
     const settings = await loadSettings();
     const { autoIndex = true, autoDeindex = false } = settings.catalogManager || {};
+    
+    // Initialiser les intégrations
+    await initIntegrations(settings);
     
     let productsToIndex = [];
     let productsToDeindex = [];
@@ -109,6 +147,7 @@ async function setupCatalogManager() {
  * Génère des produits fictifs pour le développement
  */
 function getMockProducts(count, recommendation) {
+  // Cette fonction reste inchangée
   const mockProducts = [];
   const productTypes = ['Montre connectée', 'Lampe LED', 'Écouteurs sans fil', 'Organisateur de bureau', 
                        'Gadget de cuisine', 'Accessoire pour smartphone', 'Porte-clés intelligent', 'Chargeur rapide'];
@@ -132,26 +171,30 @@ function getMockProducts(count, recommendation) {
 }
 
 /**
- * Ajoute un produit au catalogue de dropshipping
+ * Ajoute un produit au catalogue de dropshipping en utilisant l'intégration configurée
  */
 async function addProductToCatalog(product) {
   try {
     logger.info(`Ajout du produit "${product.title || 'sans titre'}" au catalogue`);
     
-    // Ici, intégrer avec votre système de gestion de catalogue
-    // Exemples d'actions :
-    // - API de votre plateforme e-commerce
-    // - Base de données interne
-    // - Génération de fiches produits
+    const settings = await loadSettings();
+    const platform = settings.integrations?.platform || 'none';
     
-    // Simuler un délai réseau pour l'intégration avec une API externe
-    await new Promise(resolve => setTimeout(resolve, 200));
-    
-    // Pour l'exemple, on simule une réussite
-    return {
-      success: true,
-      catalogId: `CAT-${Math.floor(Math.random() * 10000)}`
-    };
+    // Utiliser l'intégration configurée
+    if (platform === 'shopify' && shopifyIntegration) {
+      return await shopifyIntegration.addProduct(product);
+    } else if (platform === 'woocommerce' && wooCommerceIntegration) {
+      return await wooCommerceIntegration.addProduct(product);
+    } else {
+      // Mode simulation si aucune intégration n'est configurée
+      logger.info('Aucune intégration configurée, simulation de l\'ajout du produit');
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      return {
+        success: true,
+        catalogId: `DEMO-${Math.floor(Math.random() * 10000)}`
+      };
+    }
   } catch (error) {
     logger.error(`Erreur lors de l'ajout du produit au catalogue: ${error.message}`);
     return { success: false, error: error.message };
@@ -159,24 +202,37 @@ async function addProductToCatalog(product) {
 }
 
 /**
- * Retire un produit du catalogue de dropshipping
+ * Retire un produit du catalogue de dropshipping en utilisant l'intégration configurée
  */
 async function removeProductFromCatalog(product) {
   try {
     logger.info(`Retrait du produit "${product.title || 'sans titre'}" du catalogue`);
     
-    // Ici, intégrer avec votre système de gestion de catalogue
-    // Similaire à addProductToCatalog mais pour le retrait
+    const settings = await loadSettings();
+    const platform = settings.integrations?.platform || 'none';
+    const catalogId = product.catalogId;
     
-    // Simuler un délai réseau pour l'intégration avec une API externe
-    await new Promise(resolve => setTimeout(resolve, 150));
+    if (!catalogId) {
+      logger.warn(`Le produit n'a pas d'ID de catalogue, impossible de le retirer`);
+      return { success: false, error: 'ID de catalogue manquant' };
+    }
     
-    // Pour l'exemple, on simule une réussite
-    return { success: true };
+    // Utiliser l'intégration configurée
+    if (platform === 'shopify' && shopifyIntegration) {
+      return await shopifyIntegration.removeProduct(catalogId);
+    } else if (platform === 'woocommerce' && wooCommerceIntegration) {
+      return await wooCommerceIntegration.removeProduct(catalogId);
+    } else {
+      // Mode simulation si aucune intégration n'est configurée
+      logger.info('Aucune intégration configurée, simulation du retrait du produit');
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
+      return { success: true };
+    }
   } catch (error) {
     logger.error(`Erreur lors du retrait du produit du catalogue: ${error.message}`);
     return { success: false, error: error.message };
   }
 }
 
-module.exports = { setupCatalogManager, addProductToCatalog, removeProductFromCatalog };
+module.exports = { setupCatalogManager, addProductToCatalog, removeProductFromCatalog, initIntegrations };
