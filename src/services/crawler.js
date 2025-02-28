@@ -47,39 +47,72 @@ async function setupCrawlerJob() {
     
     // Liste des requêtes à exécuter
     const queriesToExecute = searchQueries || [
-      'produits tendance dropshipping',
-      'best selling products online',
-      'trending products ecommerce',
-      'viral products social media'
+      // Requêtes par défaut si non configurées
     ];
     
     let totalDiscovered = 0;
     let totalSaved = 0;
+    let allResults = [];
     
+    // Passer par toutes les requêtes
     for (const query of queriesToExecute) {
       logger.info(`Exécution de la requête: ${query}`);
       
-      // Utiliser l'API Brave Search
+      // Récupérer les résultats de l'API
       const results = await searchProducts(query, maxResults);
+      allResults = [...allResults, ...results];
       
-      // Traiter les résultats
-      if (results && results.length > 0) {
+      if (results.length > 0) {
         logger.info(`${results.length} résultats trouvés pour "${query}"`);
         totalDiscovered += results.length;
-        
-        // Filtrer les résultats pertinents
-        const relevantResults = await filterRelevantProducts(results);
-        logger.info(`${relevantResults.length} résultats pertinents pour "${query}"`);
-        
-        // Enregistrer les données dans la base de données
-        for (const product of relevantResults) {
-          try {
-            await saveProductData(product);
-            totalSaved++;
-          } catch (error) {
-            logger.error(`Erreur lors de l'enregistrement du produit: ${error.message}`);
-          }
-        }
+      }
+    }
+    
+    // Analyse en deux phases:
+    // Phase 1: Filtrage initial basé sur les URLs et critères de base
+    const initialFiltered = await filterRelevantProducts(allResults);
+    logger.info(`${initialFiltered.length} résultats pertinents après filtrage initial`);
+    
+    // Phase 2: Analyse plus approfondie des domaines et regroupement
+    // Grouper par domaine pour identifier les sources les plus pertinentes
+    const domainGroups = {};
+    initialFiltered.forEach(result => {
+      if (!domainGroups[result.domain]) {
+        domainGroups[result.domain] = [];
+      }
+      domainGroups[result.domain].push(result);
+    });
+    
+    // Favoriser les domaines avec plus de résultats (probablement des e-commerces)
+    const relevantResults = [];
+    Object.keys(domainGroups).forEach(domain => {
+      const domainResults = domainGroups[domain];
+      if (domainResults.length >= 2) {
+        // Ce domaine a plusieurs résultats - probablement pertinent
+        // Bonus de score pour les résultats de ce domaine
+        domainResults.forEach(result => {
+          result.relevanceScore += 10;
+          relevantResults.push(result);
+        });
+      } else {
+        // Domaine avec un seul résultat - ajouter sans bonus
+        relevantResults.push(...domainResults);
+      }
+    });
+    
+    // Trier par score de pertinence
+    relevantResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    
+    // Limiter aux N meilleurs résultats pour éviter le bruit
+    const topResults = relevantResults.slice(0, maxResults * 2);
+    
+    // Enregistrer les données dans la base de données
+    for (const product of topResults) {
+      try {
+        await saveProductData(product);
+        totalSaved++;
+      } catch (error) {
+        logger.error(`Erreur lors de l'enregistrement du produit: ${error.message}`);
       }
     }
     
