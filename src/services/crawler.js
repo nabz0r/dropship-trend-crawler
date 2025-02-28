@@ -163,34 +163,103 @@ async function filterRelevantProducts(results) {
     const settings = await loadSettings();
     const { minRelevanceScore = 30 } = settings.crawler || {};
     
-    // On pourrait implémenter ici une logique plus sophistiquée
-    // par exemple avec du NLP ou des règles spécifiques
-    
-    // Pour l'instant, on filtre simplement sur des mots-clés basiques
-    const relevantKeywords = [
-      'produit', 'product', 'vente', 'sale', 'tendance', 'trending',
-      'populaire', 'popular', 'dropshipping', 'ecommerce', 'e-commerce',
-      'mode', 'fashion', 'gadget', 'accessoire', 'accessory', 'montre', 'watch'
+    // Expressions régulières pour identifier les URLs de produits
+    const productUrlPatterns = [
+      /\/product\//i,
+      /\/products\//i,
+      /\/item\//i,
+      /\/p\/[a-z0-9]/i,
+      /\/dp\/[a-z0-9]/i,
+      /\/buy\//i,
+      /\/shop\/[a-z0-9]/i,
+      /\/goods\//i,
+      /[0-9]{5,}\.html/i,  // Format AliExpress
     ];
     
-    // Algorithme simplifié de scoring des résultats
+    // Domaines connus d'e-commerce
+    const ecommerceDomains = [
+      'amazon.com', 'aliexpress.com', 'ebay.com', 'etsy.com', 'shopify.com', 
+      'woocommerce.com', 'walmart.com', 'target.com', 'bestbuy.com', 'banggood.com'
+    ];
+    
+    // Mots-clés caractéristiques des pages produits
+    const productPageKeywords = [
+      'price', 'buy', 'add to cart', 'shipping', 'delivery', 'stock',
+      'order', 'purchase', 'shopping cart', 'checkout', 'payment',
+      'prix', 'acheter', 'panier', 'livraison', 'expédition'
+    ];
+    
+    // Algorithme amélioré de scoring des résultats
     return results.filter(result => {
       const content = (result.title + ' ' + result.description).toLowerCase();
+      const url = result.url.toLowerCase();
       let score = 0;
       
-      relevantKeywords.forEach(keyword => {
+      // 1. Vérifier si l'URL correspond à un modèle de page produit
+      const isProductUrl = productUrlPatterns.some(pattern => pattern.test(url));
+      if (isProductUrl) {
+        score += 25;
+      }
+      
+      // 2. Vérifier si l'URL provient d'un domaine e-commerce connu
+      const isEcommerceDomain = ecommerceDomains.some(domain => url.includes(domain));
+      if (isEcommerceDomain) {
+        score += 20;
+      }
+      
+      // 3. Vérifier les mots-clés caractéristiques des pages produits
+      for (const keyword of productPageKeywords) {
+        if (content.includes(keyword.toLowerCase())) {
+          score += 5;
+          break;  // Limiter le bonus à 5 points même avec plusieurs correspondances
+        }
+      }
+      
+      // 4. Analyser pour la présence de prix (formats variés)
+      const pricePatterns = [
+        /\$\d+(\.\d{2})?/,  // $xx.xx
+        /\d+(\.\d{2})?\s?\$/,  // xx.xx$
+        /\d+(\.\d{2})?\s?USD/i,  // xx.xx USD
+        /\d+(\.\d{2})?\s?€/,  // xx.xx€
+        /€\s?\d+(\.\d{2})?/,  // €xx.xx
+        /\d+(\.\d{2})?\s?EUR/i,  // xx.xx EUR
+        /\£\d+(\.\d{2})?/,  // £xx.xx
+        /\d+(\.\d{2})?\s?GBP/i,  // xx.xx GBP
+      ];
+      
+      const hasPriceFormat = pricePatterns.some(pattern => pattern.test(content));
+      if (hasPriceFormat) {
+        score += 20;
+      }
+      
+      // 5. Mots-clés de relevance originaux (mots liés au dropshipping)
+      const relevantKeywords = [
+        'produit', 'product', 'vente', 'sale', 'tendance', 'trending',
+        'populaire', 'popular', 'dropshipping', 'ecommerce', 'e-commerce',
+        'mode', 'fashion', 'gadget', 'accessoire', 'accessory', 'montre', 'watch'
+      ];
+      
+      for (const keyword of relevantKeywords) {
         if (content.includes(keyword.toLowerCase())) {
           score += 10;
         }
-      });
+      }
       
-      // On attribue un score supplémentaire si le titre ou la description contient des mots-clés spécifiques
+      // Bonus spécifiques
       if (content.includes('dropshipping')) score += 20;
       if (content.includes('tendance') || content.includes('trending')) score += 15;
       if (content.includes('populaire') || content.includes('popular')) score += 15;
       
-      // Ajouter le score au résultat pour référence
+      // Stocker le score pour référence
       result.relevanceScore = score;
+      
+      // Bonus de debug: ajouter la raison du score élevé pour faciliter l'analyse
+      if (score >= minRelevanceScore) {
+        result.matchReason = [];
+        if (isProductUrl) result.matchReason.push('URL pattern');
+        if (isEcommerceDomain) result.matchReason.push('E-commerce domain');
+        if (hasPriceFormat) result.matchReason.push('Price format');
+      }
       
       return score >= minRelevanceScore;
     });
