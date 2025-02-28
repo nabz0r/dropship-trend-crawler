@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intégrations - DropShip Trend Crawler</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      margin: 0;
+    }
+    .nav-bar {
+      display: flex;
+      justify-content: space-between;
+      background-color: #34495e;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .nav-bar a {
+      color: white;
+      text-decoration: none;
+      padding: 5px 15px;
+      border-radius: 3px;
+    }
+    .nav-bar a:hover, .nav-bar a.active {
+      background-color: #2980b9;
+    }
+    .config-card {
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    .config-section {
+      margin-bottom: 20px;
+    }
+    h2 {
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 10px;
+      color: #2c3e50;
+    }
+    .platform-tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    .platform-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+      margin-right: 5px;
+    }
+    .platform-tab.active {
+      background-color: #f9f9f9;
+      border-color: #ddd;
+      font-weight: bold;
+    }
+    .platform-content {
+      display: none;
+    }
+    .platform-content.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="text"],
+    input[type="password"] {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 3px;
+    }
+    button {
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 3px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-right: 10px;
+    }
+    button:hover {
+      background-color: #3498db;
+    }
+    .test-btn {
+      background-color: #27ae60;
+    }
+    .test-btn:hover {
+      background-color: #2ecc71;
+    }
+    .message {
+      padding: 10px;
+      border-radius: 3px;
+      margin-bottom: 10px;
+    }
+    .success {
+      background-color: #2ecc71;
+      color: white;
+    }
+    .error {
+      background-color: #e74c3c;
+      color: white;
+    }
+    .hidden {
+      display: none;
+    }
+    footer {
+      margin-top: 50px;
+      text-align: center;
+      color: #7f8c8d;
+      font-size: 14px;
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>DropShip Trend Crawler</h1>
+    <p>Configuration des intégrations avec les plateformes e-commerce</p>
+  </header>
+
+  <div class="nav-bar">
+    <div>
+      <a href="/">Dashboard</a>
+      <a href="/products.html">Produits</a>
+      <a href="/settings.html">Configuration</a>
+      <a href="/integrations.html" class="active">Intégrations</a>
+    </div>
+    <div>
+      <a href="#" id="start-crawl-btn">Lancer un crawling</a>
+    </div>
+  </div>
+  
+  <div id="success-message" class="message success hidden"></div>
+  <div id="error-message" class="message error hidden"></div>
+
+  <div class="config-card">
+    <h2>Configuration des intégrations</h2>
+    <p>Configurez l'intégration avec votre plateforme e-commerce préférée pour automatiser l'ajout et la suppression de produits.</p>
+    
+    <div class="platform-tabs">
+      <div class="platform-tab active" data-platform="none">Aucune (Simulation)</div>
+      <div class="platform-tab" data-platform="shopify">Shopify</div>
+      <div class="platform-tab" data-platform="woocommerce">WooCommerce</div>
+      <div class="platform-tab" data-platform="aliexpress">AliExpress</div>
+    </div>
+    
+    <div class="platform-content active" id="platform-none">
+      <p>Mode simulation activé. Aucune intégration n'est configurée. Les produits ne seront pas réellement ajoutés à une plateforme e-commerce.</p>
+      <p>Pour configurer une intégration, sélectionnez l'une des plateformes disponibles dans les onglets ci-dessus.</p>
+    </div>
+    
+    <div class="platform-content" id="platform-shopify">
+      <h3>Configuration Shopify</h3>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="shopify-enabled"> Activer l'intégration Shopify
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="shopify-apikey">API Key</label>
+        <input type="text" id="shopify-apikey" placeholder="Clé API Shopify">
+      </div>
+      <div class="form-group">
+        <label for="shopify-password">API Password</label>
+        <input type="password" id="shopify-password" placeholder="Mot de passe API">
+      </div>
+      <div class="form-group">
+        <label for="shopify-storename">Nom de la boutique</label>
+        <input type="text" id="shopify-storename" placeholder="votre-boutique">
+      </div>
+      <button id="save-shopify">Enregistrer</button>
+      <button id="test-shopify" class="test-btn">Tester la connexion</button>
+    </div>
+    
+    <div class="platform-content" id="platform-woocommerce">
+      <h3>Configuration WooCommerce</h3>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="woocommerce-enabled"> Activer l'intégration WooCommerce
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="woocommerce-siteurl">URL du site</label>
+        <input type="text" id="woocommerce-siteurl" placeholder="https://votre-site.com">
+      </div>
+      <div class="form-group">
+        <label for="woocommerce-consumerkey">Consumer Key</label>
+        <input type="text" id="woocommerce-consumerkey" placeholder="ck_xxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <div class="form-group">
+        <label for="woocommerce-consumersecret">Consumer Secret</label>
+        <input type="password" id="woocommerce-consumersecret" placeholder="cs_xxxxxxxxxxxxxxxxxxxxxxx">
+      </div>
+      <button id="save-woocommerce">Enregistrer</button>
+      <button id="test-woocommerce" class="test-btn">Tester la connexion</button>
+    </div>
+    
+    <div class="platform-content" id="platform-aliexpress">
+      <h3>Configuration AliExpress</h3>
+      <div class="form-group">
+        <label>
+          <input type="checkbox" id="aliexpress-enabled"> Activer l'intégration AliExpress
+        </label>
+      </div>
+      <div class="form-group">
+        <label for="aliexpress-apikey">API Key</label>
+        <input type="text" id="aliexpress-apikey" placeholder="Clé API AliExpress">
+      </div>
+      <div class="form-group">
+        <label for="aliexpress-trackingid">Tracking ID</label>
+        <input type="text" id="aliexpress-trackingid" placeholder="Tracking ID pour les affiliations">
+      </div>
+      <button id="save-aliexpress">Enregistrer</button>
+      <button id="test-aliexpress" class="test-btn">Tester la connexion</button>
+    </div>
+  </div>
+
+  <footer>
+    <p>DropShip Trend Crawler - Version 0.1.0</p>
+  </footer>
+
+  <script>
+    // Fonction pour afficher un message
+    function showMessage(type, message) {
+      const element = document.getElementById(`${type}-message`);
+      element.textContent = message;
+      element.classList.remove('hidden');
+      setTimeout(() => {
+        element.classList.add('hidden');
+      }, 5000);
+    }
+
+    // Chargement de la configuration actuelle
+    async function loadIntegrationSettings() {
+      try {
+        const response = await fetch('/api/settings');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des paramètres');
+        }
+        
+        const settings = await response.json();
+        const integrations = settings.integrations || {};
+        
+        // Sélectionner la plateforme active
+        const platform = integrations.platform || 'none';
+        setActivePlatform(platform);
+        
+        // Charger les paramètres Shopify
+        if (integrations.shopify) {
+          document.getElementById('shopify-enabled').checked = integrations.shopify.enabled || false;
+          document.getElementById('shopify-apikey').value = integrations.shopify.apiKey || '';
+          document.getElementById('shopify-password').value = integrations.shopify.password || '';
+          document.getElementById('shopify-storename').value = integrations.shopify.storeName || '';
+        }
+        
+        // Charger les paramètres WooCommerce
+        if (integrations.woocommerce) {
+          document.getElementById('woocommerce-enabled').checked = integrations.woocommerce.enabled || false;
+          document.getElementById('woocommerce-siteurl').value = integrations.woocommerce.siteUrl || '';
+          document.getElementById('woocommerce-consumerkey').value = integrations.woocommerce.consumerKey || '';
+          document.getElementById('woocommerce-consumersecret').value = integrations.woocommerce.consumerSecret || '';
+        }
+        
+        // Charger les paramètres AliExpress
+        if (integrations.aliexpress) {
+          document.getElementById('aliexpress-enabled').checked = integrations.aliexpress.enabled || false;
+          document.getElementById('aliexpress-apikey').value = integrations.aliexpress.apiKey || '';
+          document.getElementById('aliexpress-trackingid').value = integrations.aliexpress.trackingId || '';
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Fonction pour changer l'onglet actif
+    function setActivePlatform(platform) {
+      // Mettre à jour les onglets
+      document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      document.querySelector(`.platform-tab[data-platform="${platform}"]`).classList.add('active');
+      
+      // Mettre à jour le contenu
+      document.querySelectorAll('.platform-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      document.getElementById(`platform-${platform}`).classList.add('active');
+    }
+
+    // Fonction pour enregistrer la configuration Shopify
+    async function saveShopifyConfig() {
+      try {
+        const response = await fetch('/api/settings');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des paramètres');
+        }
+        
+        const settings = await response.json();
+        if (!settings.integrations) {
+          settings.integrations = {};
+        }
+        
+        // Mettre à jour la plateforme active si l'intégration est activée
+        if (document.getElementById('shopify-enabled').checked) {
+          settings.integrations.platform = 'shopify';
+        } else if (settings.integrations.platform === 'shopify') {
+          settings.integrations.platform = 'none';
+        }
+        
+        // Mettre à jour la configuration Shopify
+        settings.integrations.shopify = {
+          enabled: document.getElementById('shopify-enabled').checked,
+          apiKey: document.getElementById('shopify-apikey').value,
+          password: document.getElementById('shopify-password').value,
+          storeName: document.getElementById('shopify-storename').value
+        };
+        
+        // Enregistrer les paramètres
+        const saveResponse = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+        
+        if (!saveResponse.ok) {
+          throw new Error('Erreur lors de l\'enregistrement des paramètres');
+        }
+        
+        showMessage('success', 'Configuration Shopify enregistrée avec succès');
+        loadIntegrationSettings();
+      } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Fonction pour enregistrer la configuration WooCommerce
+    async function saveWooCommerceConfig() {
+      try {
+        const response = await fetch('/api/settings');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des paramètres');
+        }
+        
+        const settings = await response.json();
+        if (!settings.integrations) {
+          settings.integrations = {};
+        }
+        
+        // Mettre à jour la plateforme active si l'intégration est activée
+        if (document.getElementById('woocommerce-enabled').checked) {
+          settings.integrations.platform = 'woocommerce';
+        } else if (settings.integrations.platform === 'woocommerce') {
+          settings.integrations.platform = 'none';
+        }
+        
+        // Mettre à jour la configuration WooCommerce
+        settings.integrations.woocommerce = {
+          enabled: document.getElementById('woocommerce-enabled').checked,
+          siteUrl: document.getElementById('woocommerce-siteurl').value,
+          consumerKey: document.getElementById('woocommerce-consumerkey').value,
+          consumerSecret: document.getElementById('woocommerce-consumersecret').value
+        };
+        
+        // Enregistrer les paramètres
+        const saveResponse = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+        
+        if (!saveResponse.ok) {
+          throw new Error('Erreur lors de l\'enregistrement des paramètres');
+        }
+        
+        showMessage('success', 'Configuration WooCommerce enregistrée avec succès');
+        loadIntegrationSettings();
+      } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Fonction pour enregistrer la configuration AliExpress
+    async function saveAliExpressConfig() {
+      try {
+        const response = await fetch('/api/settings');
+        if (!response.ok) {
+          throw new Error('Erreur lors du chargement des paramètres');
+        }
+        
+        const settings = await response.json();
+        if (!settings.integrations) {
+          settings.integrations = {};
+        }
+        
+        // Mettre à jour la configuration AliExpress
+        settings.integrations.aliexpress = {
+          enabled: document.getElementById('aliexpress-enabled').checked,
+          apiKey: document.getElementById('aliexpress-apikey').value,
+          trackingId: document.getElementById('aliexpress-trackingid').value
+        };
+        
+        // Enregistrer les paramètres
+        const saveResponse = await fetch('/api/settings', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+        
+        if (!saveResponse.ok) {
+          throw new Error('Erreur lors de l\'enregistrement des paramètres');
+        }
+        
+        showMessage('success', 'Configuration AliExpress enregistrée avec succès');
+        loadIntegrationSettings();
+      } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Fonction pour tester une connexion
+    async function testConnection(platform) {
+      try {
+        const response = await fetch('/api/integrations/test');
+        if (!response.ok) {
+          throw new Error('Erreur lors du test de connexion');
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showMessage('success', `Connexion à ${platform} établie avec succès!`);
+        } else {
+          showMessage('error', result.message || 'Échec du test de connexion');
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        showMessage('error', `Erreur: ${error.message}`);
+      }
+    }
+
+    // Gestionnaires d'événements
+    document.addEventListener('DOMContentLoaded', () => {
+      // Chargement initial
+      loadIntegrationSettings();
+      
+      // Gestion des onglets
+      document.querySelectorAll('.platform-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const platform = tab.getAttribute('data-platform');
+          setActivePlatform(platform);
+        });
+      });
+      
+      // Bouttons d'enregistrement
+      document.getElementById('save-shopify').addEventListener('click', saveShopifyConfig);
+      document.getElementById('save-woocommerce').addEventListener('click', saveWooCommerceConfig);
+      document.getElementById('save-aliexpress').addEventListener('click', saveAliExpressConfig);
+      
+      // Boutons de test
+      document.getElementById('test-shopify').addEventListener('click', () => testConnection('Shopify'));
+      document.getElementById('test-woocommerce').addEventListener('click', () => testConnection('WooCommerce'));
+      document.getElementById('test-aliexpress').addEventListener('click', () => testConnection('AliExpress'));
+      
+      // Bouton de crawling
+      document.getElementById('start-crawl-btn').addEventListener('click', async function(e) {
+        e.preventDefault();
+        this.textContent = 'Crawling en cours...';
+        this.style.backgroundColor = '#7f8c8d';
+        
+        try {
+          const response = await fetch('/api/crawl', {
+            method: 'POST'
+          });
+          
+          if (response.ok) {
+            showMessage('success', 'Crawling lancé avec succès!');
+          } else {
+            throw new Error('Erreur lors du lancement du crawling');
+          }
+        } catch (error) {
+          console.error('Erreur:', error);
+          showMessage('error', `Erreur: ${error.message}`);
+        } finally {
+          this.textContent = 'Lancer un crawling';
+          this.style.backgroundColor = '#2980b9';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
