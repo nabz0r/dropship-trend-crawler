@@ -17,14 +17,18 @@ async function loadSettings() {
     logger.warn(`Impossible de charger les paramètres: ${error.message}. Utilisation des paramètres par défaut.`);
     return {
       crawler: {
-        searchQueries: [
-          'produits tendance dropshipping',
-          'best selling products online',
-          'trending products ecommerce',
-          'viral products social media'
-        ],
-        maxResults: 20,
-        minRelevanceScore: 30
+        "searchQueries": [
+      "trending products dropshipping inurl:product OR inurl:item",
+      "best selling products online site:amazon.com OR site:aliexpress.com OR site:etsy.com",
+      "popular products 2025 \"add to cart\" OR \"buy now\"",
+      "viral products social media $20..$100",
+      "new gadgets dropshipping -articles -blog -news",
+      "unique products ecommerce inurl:shop",
+      "trending fashion accessories price shipping",
+      "dropshipping products high margin instock"
+    ],
+    "maxResults": 20,
+    "minRelevanceScore": 30
       }
     };
   }
