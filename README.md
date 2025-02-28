@@ -25,6 +25,8 @@ flowchart LR
     style C fill:#e74c3c,stroke:#333,stroke-width:2px
     style D fill:#9b59b6,stroke:#333,stroke-width:2px
 
+```
+
 1. **Discovery**: Predefined queries are sent to the Brave Search API to find potential products
 2. **Analysis**: Each product is evaluated according to popularity, profitability, competition and seasonality
 3. **Decision**: Based on this analysis, the system recommends adding, monitoring or ignoring each product
