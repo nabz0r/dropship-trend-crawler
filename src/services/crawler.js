@@ -7,6 +7,43 @@ const path = require('path');
 // Chemin vers le fichier de configuration local
 const CONFIG_FILE = path.join(process.cwd(), 'config', 'crawler-settings.json');
 
+// Ajouter à src/services/crawler.js
+
+// Stockage des domaines performants (pourrait être déplacé vers la base de données)
+let performantDomains = {};
+
+/**
+ * Enregistre les performances d'un domaine pour l'apprentissage
+ */
+async function recordDomainPerformance(domain, isProductPage) {
+  if (!performantDomains[domain]) {
+    performantDomains[domain] = {
+      total: 0,
+      productHits: 0
+    };
+  }
+  
+  performantDomains[domain].total++;
+  if (isProductPage) {
+    performantDomains[domain].productHits++;
+  }
+  
+  // Calcul du taux de succès
+  const successRate = performantDomains[domain].productHits / performantDomains[domain].total;
+  
+  // Sauvegarder cette information (pourrait être dans un fichier/base de données)
+  try {
+    const performancePath = path.join(process.cwd(), 'data', 'domain-performance.json');
+    await fs.writeFile(performancePath, JSON.stringify(performantDomains, null, 2));
+  } catch (error) {
+    logger.error(`Erreur lors de l'enregistrement des performances de domaine: ${error.message}`);
+  }
+  
+  return successRate;
+}
+
+// Utiliser cette fonction après validation des résultats
+
 // Fonction utilitaire pour charger les paramètres
 async function loadSettings() {
   try {
