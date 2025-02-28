@@ -3,6 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-4.4%2B-green.svg)](https://www.mongodb.com/)
+[![E-commerce Integrations](https://img.shields.io/badge/Integrations-Shopify%20|%20WooCommerce-blue.svg)](#e-commerce-integrations)
 
 An automated system that uses the Brave Search API to identify trending products for dropshipping.
 
@@ -18,10 +19,11 @@ Unlike a traditional web crawler, this system uses the Brave Search API to disco
 flowchart LR
     A["Discovery\nBrave Search API"] --> B["Analysis\nScoring Algorithm"]
     B --> C["Decision\nIndex / Watch / Skip"]
+    C --> D["Integration\nE-commerce Platform"]
     style A fill:#3498db,stroke:#333,stroke-width:2px
     style B fill:#2ecc71,stroke:#333,stroke-width:2px
     style C fill:#e74c3c,stroke:#333,stroke-width:2px
-```
+    style D fill:#9b59b6,stroke:#333,stroke-width:2px
 
 1. **Discovery**: Predefined queries are sent to the Brave Search API to find potential products
 2. **Analysis**: Each product is evaluated according to popularity, profitability, competition and seasonality
@@ -34,21 +36,37 @@ flowchart LR
 ```mermaid
 flowchart TD
     API["Brave Search API"] --> Crawler
-    Crawler --> DB[(MongoDB)]
-    DB --> Analyzer
-    Analyzer --> DB
-    DB --> CatalogManager["Catalog Manager"]
-    CatalogManager --> YourSystem["Your E-commerce System"]
+    AliExpress["AliExpress API"] --> ProductSource
+    
+    subgraph Core["Core System"]
+        Crawler --> DB[(MongoDB)]
+        ProductSource["Product Source"] --> DB
+        DB --> Analyzer
+        Analyzer --> DB
+        DB --> CatalogManager["Catalog Manager"]
+    end
+    
+    subgraph Integrations["E-commerce Integrations"]
+        CatalogManager --> Shopify["Shopify Store"]
+        CatalogManager --> WooCommerce["WooCommerce Store"]
+        CatalogManager --> OtherPlatforms["Other Platforms"]
+    end
+    
     DB --> WebUI["Web Dashboard"]
     User[User] --> WebUI
+    WebUI --> IntegrationsUI["Integrations UI"]
+    IntegrationsUI --> Integrations
     
     classDef external fill:#f9f9f9,stroke:#333,stroke-width:1px
     classDef core fill:#d6eaf8,stroke:#333,stroke-width:2px
     classDef ui fill:#e8f8f5,stroke:#333,stroke-width:2px
+    classDef integrations fill:#f8d9e9,stroke:#333,stroke-width:2px
     
-    class API,YourSystem external
-    class Crawler,Analyzer,CatalogManager,DB core
-    class WebUI,User ui
+    class API,AliExpress external
+    class Core core
+    class WebUI,User,IntegrationsUI ui
+    class Integrations,Shopify,WooCommerce,OtherPlatforms integrations
+
 ```
 
 ## Objective
@@ -68,21 +86,24 @@ This project aims to develop a web application that:
   <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white" alt="Express">
   <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black" alt="JavaScript">
-  <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white" alt="HTML5">
-  <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white" alt="CSS3">
+  <img src="https://img.shields.io/badge/Shopify-7AB55C?style=for-the-badge&logo=shopify&logoColor=white" alt="Shopify">
+  <img src="https://img.shields.io/badge/WooCommerce-96588A?style=for-the-badge&logo=woocommerce&logoColor=white" alt="WooCommerce">
 </p>
 
 - **Backend**: Node.js with Express
 - **Frontend**: HTML, CSS, JavaScript
 - **Database**: MongoDB
 - **Crawling**: Brave Search API
-- **Deployment**: Docker and GitHub Actions (planned for future versions)
+- **Integrations**: Shopify, WooCommerce, AliExpress
+- **Deployment**: Docker and GitHub Actions
 
 ## Prerequisites
 
 - Node.js 14+ and npm installed
 - MongoDB installed and running (optional - the system can run in demo mode without a database)
 - Brave Search API key (optional - the system uses test data if no key is configured)
+- For e-commerce integrations: API credentials for your platform (Shopify, WooCommerce, etc.)
+
 
 [MongoDB Installation Guide](docs/mongodb-installation.md)
 
@@ -141,6 +162,32 @@ pie title Product Scoring Factors
     "Seasonality" : 10
 ```
 
+### E-commerce Integrations
+
+The system now includes built-in integrations with popular e-commerce platforms:
+
+```mermaid
+flowchart LR
+    System["DropShip\nCrawler"] -- "Product Data" --> Integrations
+
+    subgraph Integrations["Platform Integrations"]
+        Shopify["Shopify\nIntegration"]
+        WooCommerce["WooCommerce\nIntegration"] 
+        AliExpress["AliExpress\nIntegration"]
+    end
+
+    Shopify -- "API Calls" --> ShopifyStore["Your Shopify\nStore"]
+    WooCommerce -- "API Calls" --> WooStore["Your WooCommerce\nStore"]
+    AliExpress -- "Product Research" --> AliData["Sourcing\nData"]
+
+    style System fill:#3498db,stroke:#333,stroke-width:2px
+    style Integrations fill:#f8d9e9,stroke:#333,stroke-width:1px
+    style ShopifyStore fill:#95c675,stroke:#333,stroke-width:2px
+    style WooStore fill:#96588a,stroke:#333,stroke-width:2px
+    style AliData fill:#e74c3c,stroke:#333,stroke-width:2px
+```
+Configure your platform credentials in the dedicated Integrations page and enable automatic product publishing
+
 ## API Endpoints
 
 The REST API exposes the following endpoints:
@@ -160,14 +207,18 @@ The REST API exposes the following endpoints:
 | `/api/settings` | PUT | Update settings |
 | `/api/settings/reset` | GET | Reset to default |
 | `/api/crawl` | POST | Manually trigger a crawl |
+| `/api/integrations/test` | GET | Test the e-commerce integration connection |
+| `/api/integrations/status | GET | Get integration status |
+| `/api/integrations/search-aliexpress | POST | Search for products on AliExpress |
 
 ## Integrating with your dropshipping system
 
 To integrate this system with your dropshipping platform, you can:
 
-1. Modify the `addProductToCatalog` and `removeProductFromCatalog` methods in `src/services/catalogManager.js` to connect them to your e-commerce API.
-2. Develop specific middlewares to translate data between our format and your platform's.
-3. Use the REST API to develop your own user interface.
+1. Use the built-in integrations for Shopify and WooCommerce
+2. Modify the addProductToCatalog and removeProductFromCatalog methods in src/services/catalogManager.js to connect to other platforms
+3. Develop specific middlewares to translate data between our format and your platform's.
+4. Use the REST API to develop your own user interface.
 
 ## Screenshots
 <img width="1212" alt="Capture d’écran 2025-02-26 à 14 41 11" src="https://github.com/user-attachments/assets/df020f38-fc52-43f0-8453-38d917718dbe" />
