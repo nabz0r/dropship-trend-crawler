@@ -116,24 +116,27 @@
     <p>Configuration du système</p>
   </header>
 
-  <div class="nav-bar">
-    <div>
-      <a href="/">Dashboard</a>
-      <a href="/products.html">Produits</a>
-      <a href="/settings.html" class="active">Configuration</a>
-    </div>
-    <div>
-      <a href="/api/crawl" id="start-crawl-btn">Lancer un crawling</a>
-    </div>
+ <div class="nav-bar">
+  <div>
+    <a href="/">Dashboard</a>
+    <a href="/products.html">Produits</a>
+    <a href="/settings.html" class="active">Configuration</a>
+    <a href="/integrations.html">Intégrations</a>
   </div>
+  <div>
+    <a href="#" id="start-crawl-btn">Lancer un crawling</a>
+  </div>
+</div>
   
   <div id="success-message" class="message success hidden"></div>
   <div id="error-message" class="message error hidden"></div>
 
   <div class="config-card">
-    <h2>Configuration du système</h2>
-    <p>Modifiez les paramètres ci-dessous pour personnaliser le comportement du système. Les modifications seront appliquées lors du prochain crawling.</p>
-    
+  <h2>Intégrations</h2>
+  <p>Des intégrations avec des plateformes e-commerce comme Shopify et WooCommerce sont disponibles.</p>
+  <p>Ces intégrations permettent d'automatiser l'ajout et la suppression de produits dans votre catalogue.</p>
+  <p><a href="/integrations.html" class="action-btn">Configurer les intégrations</a></p>
+</div>
     <div class="config-section">
       <h3>Paramètres actuels</h3>
       <textarea id="config-editor"></textarea>
