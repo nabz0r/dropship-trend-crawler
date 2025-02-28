@@ -91,9 +91,6 @@ async function setupCrawlerJob() {
   }
 }
 
-/**
- * Effectue une recherche de produits via l'API Brave
- */
 async function searchProducts(query, count = 20) {
   try {
     // Vérifier si l'API key est configurée
@@ -102,12 +99,21 @@ async function searchProducts(query, count = 20) {
       return getMockSearchResults(query, count);
     }
     
+    // Paramètres avancés pour Brave Search
+    const searchParams = {
+      q: query,
+      count: count,
+      search_lang: 'fr,en',  // Langues français et anglais
+      country: 'US,FR',      // Résultats US et France
+      spellcheck: true,      // Correction orthographique
+      result_filter: 'web',  // Uniquement des résultats web
+      text_format: 'html',   // Format HTML pour meilleure détection
+      ui_lang: 'fr'          // Interface en français
+    };
+    
     // Appel à l'API Brave Search
     const response = await axios.get('https://api.search.brave.com/res/v1/web/search', {
-      params: {
-        q: query,
-        count: count
-      },
+      params: searchParams,
       headers: {
         'Accept': 'application/json',
         'Accept-Encoding': 'gzip',
@@ -115,16 +121,28 @@ async function searchProducts(query, count = 20) {
       }
     });
     
-    // Extraire et formater les résultats pertinents
+    // Traitement approfondi des résultats
     if (response.data && response.data.web && response.data.web.results) {
-      return response.data.web.results.map(result => ({
-        title: result.title,
-        description: result.description,
-        url: result.url,
-        source: 'brave_search',
-        query: query,
-        discoveredAt: new Date()
-      }));
+      return response.data.web.results.map(result => {
+        // Extraire le domaine pour analyse
+        let domain = '';
+        try {
+          const urlObj = new URL(result.url);
+          domain = urlObj.hostname;
+        } catch (e) {
+          domain = 'unknown';
+        }
+        
+        return {
+          title: result.title,
+          description: result.description,
+          url: result.url,
+          source: 'brave_search',
+          query: query,
+          domain: domain,  // Stocker le domaine pour analyse ultérieure
+          discoveredAt: new Date()
+        };
+      });
     }
     
     return [];
