@@ -256,7 +256,9 @@ We welcome:
 
 ## 📱 Contact
 
-- 📧 Email: nabz0r@gmail.com
+<a href="https://github.com/nabz0r/modern-phone-checker/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=nabz0r/modern-phone-checker" />
+</a>
 - 🐙 GitHub: [@nabz0r](https://github.com/nabz0r)
 
 ## 📄 License
